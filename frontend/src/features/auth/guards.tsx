@@ -27,3 +27,13 @@ export function AdminRoute({ children }: PropsWithChildren) {
   }
   return children;
 }
+
+export function PrivateRoute({ children }: PropsWithChildren) {
+  const auth = useAuthState();
+  const location = useLocation();
+  if (auth.isPending) return <FullPageLoading />;
+  if (!auth.data?.authenticated) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+  return children;
+}

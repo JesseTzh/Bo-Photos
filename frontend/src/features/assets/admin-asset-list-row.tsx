@@ -13,6 +13,7 @@ interface AdminAssetListRowProps {
   onDelete: () => void;
   onPurge: () => void;
   onToggleVisible: (value: boolean) => void;
+  onTogglePrivate: (value: boolean) => void;
   onToggleFeatured: (value: boolean) => void;
 }
 
@@ -27,6 +28,7 @@ export function AdminAssetListRow({
   onDelete,
   onPurge,
   onToggleVisible,
+  onTogglePrivate,
   onToggleFeatured
 }: AdminAssetListRowProps) {
   const imageUrl = asset.thumbnail_url || asset.preview_url;
@@ -50,7 +52,9 @@ export function AdminAssetListRow({
       <div className="admin-asset-row-actions">
         <Space wrap>
           <Tag>{asset.status}</Tag>
+          {asset.private ? <Tag color="purple">隐私</Tag> : null}
           <Switch size="small" checked={asset.visible} onChange={onToggleVisible} />
+          <Switch size="small" checked={asset.private} onChange={onTogglePrivate} />
           <Switch size="small" checked={asset.featured} onChange={onToggleFeatured} />
           <Tooltip title="查看"><Button icon={<EyeOutlined />} onClick={onView} /></Tooltip>
           <Tooltip title="编辑"><Button icon={<EditOutlined />} onClick={onEdit} /></Tooltip>

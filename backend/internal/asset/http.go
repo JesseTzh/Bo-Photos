@@ -49,6 +49,7 @@ type AssetDTO struct {
 	ErrorCode      string     `json:"error_code,omitempty"`
 	CreatedAt      time.Time  `json:"created_at"`
 	UpdatedAt      time.Time  `json:"updated_at"`
+	Private        bool       `json:"private"`
 }
 
 func NewHTTPHandler(service *Service, repository *Repository) *HTTPHandler {
@@ -68,6 +69,7 @@ func (h *HTTPHandler) AdminRoutes(register ...func(chi.Router)) http.Handler {
 	router.Post("/", h.upload)
 	router.Get("/", h.listAdmin)
 	router.Get("/filters", h.adminFilters)
+	router.Get("/private", h.listPrivate)
 	router.Put("/sort", h.updateSort)
 	router.Patch("/{id}", h.update)
 	router.Delete("/{id}", h.delete)
@@ -120,6 +122,14 @@ func (h *HTTPHandler) listAdmin(w http.ResponseWriter, r *http.Request) {
 		}
 		filter.Visible = &parsed
 	}
+	if value := query.Get("private"); value != "" {
+		parsed, err := strconv.ParseBool(value)
+		if err != nil {
+			writeAssetError(w, r, http.StatusBadRequest, "INVALID_FILTER", "private 筛选无效")
+			return
+		}
+		filter.Private = &parsed
+	}
 	if value := query.Get("featured"); value != "" {
 		parsed, err := strconv.ParseBool(value)
 		if err != nil {
@@ -131,6 +141,26 @@ func (h *HTTPHandler) listAdmin(w http.ResponseWriter, r *http.Request) {
 	items, total, err := h.repository.ListAdmin(r.Context(), filter)
 	if err != nil {
 		writeAssetError(w, r, http.StatusInternalServerError, "ASSET_LIST_FAILED", "读取图片列表失败")
+		return
+	}
+	dtos := make([]AssetDTO, 0, len(items))
+	for _, item := range items {
+		dtos = append(dtos, toDTO(item))
+	}
+	writeAssetJSON(w, http.StatusOK, map[string]any{
+		"page": filter.Page, "page_size": filter.PageSize, "total": total, "items": dtos,
+	})
+}
+
+func (h *HTTPHandler) listPrivate(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	filter := PrivateFilter{
+		Page:     intQuery(query.Get("page"), 1),
+		PageSize: intQuery(query.Get("page_size"), 16),
+	}
+	items, total, err := h.repository.ListPrivate(r.Context(), filter)
+	if err != nil {
+		writeAssetError(w, r, http.StatusInternalServerError, "ASSET_LIST_FAILED", "读取隐私相册失败")
 		return
 	}
 	dtos := make([]AssetDTO, 0, len(items))
@@ -322,7 +352,7 @@ func (h *HTTPHandler) listPublic(w http.ResponseWriter, r *http.Request) {
 
 func (h *HTTPHandler) getPublic(w http.ResponseWriter, r *http.Request) {
 	item, err := h.repository.Get(r.Context(), chi.URLParam(r, "id"))
-	if errors.Is(err, ErrNotFound) || item.Status != StatusReady || !item.Visible {
+	if errors.Is(err, ErrNotFound) || item.Status != StatusReady || !item.Visible || item.Private {
 		writeAssetError(w, r, http.StatusNotFound, "ASSET_NOT_FOUND", "图片不存在")
 		return
 	}
@@ -356,7 +386,7 @@ func toDTO(item Asset) AssetDTO {
 		EXIFJSON: item.EXIFJSON, ShootAt: item.ShootAt, Camera: item.Camera,
 		Lens: item.Lens, ExposureTime: item.ExposureTime, Aperture: item.Aperture,
 		ISO: item.ISO, FocalLength: item.FocalLength, Visible: item.Visible,
-		ShowOnHomepage: item.ShowOnHomepage, Featured: item.Featured, Sort: item.Sort,
+		Private: item.Private, ShowOnHomepage: item.ShowOnHomepage, Featured: item.Featured, Sort: item.Sort,
 		ErrorCode: item.ErrorCode, CreatedAt: item.CreatedAt, UpdatedAt: item.UpdatedAt,
 	}
 	if item.ThumbnailKey != "" {

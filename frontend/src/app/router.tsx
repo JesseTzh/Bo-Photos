@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import { AdminRoute, LoginRoute } from "../features/auth/guards";
+import { AdminRoute, LoginRoute, PrivateRoute } from "../features/auth/guards";
 import { AdminPage } from "../pages/admin-page";
 import { HomePage } from "../pages/home-page";
 import { LoginPage } from "../pages/login-page";
@@ -19,6 +19,7 @@ import { AboutPage } from "../pages/about-page";
 import { AdminSettingsPage } from "../pages/admin-settings-page";
 import { AdminAnalyticsPage } from "../pages/admin-analytics-page";
 import { AdminAccountPage } from "../pages/admin-account-page";
+import { PrivateAlbumPage } from "../pages/private-album-page";
 
 export const router = createBrowserRouter([
   {
@@ -53,6 +54,14 @@ export const router = createBrowserRouter([
   {
     path: "/preview/:id",
     element: <PreviewPage />
+  },
+  {
+    path: "/private",
+    element: (
+      <PrivateRoute>
+        <PrivateAlbumPage />
+      </PrivateRoute>
+    )
   },
   {
     path: "/setup",

@@ -10,6 +10,7 @@ export interface UploadMetadataDraft {
   title?: string;
   description?: string;
   visible: boolean;
+  private: boolean;
   show_on_homepage: boolean;
   featured: boolean;
   sort: number;
@@ -43,6 +44,7 @@ export const defaultUploadMetadata: UploadMetadataDraft = {
   album_ids: [],
   tag_ids: [],
   visible: true,
+  private: false,
   show_on_homepage: true,
   featured: false,
   sort: 0

@@ -63,6 +63,7 @@ export function UnifiedNav({ hideThemeToggle = false }: { hideThemeToggle?: bool
   const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
   const consoleHref = auth.data?.authenticated ? "/admin" : "/login";
   const consoleLabel = auth.data?.authenticated ? t("Link.dashboard") : t("Login.signIn");
+  const showPrivateLink = Boolean(auth.data?.authenticated);
 
   return (
     <>
@@ -107,6 +108,19 @@ export function UnifiedNav({ hideThemeToggle = false }: { hideThemeToggle?: bool
               );
             })}
             <span className="mx-3 h-3 w-px bg-border/60" />
+            {showPrivateLink ? (
+              <AppLink
+                href="/private"
+                className={cn(
+                  "px-4 py-1.5 text-[15px] tracking-[0.02em] transition-all duration-300",
+                  isActive("/private")
+                    ? "font-medium text-foreground"
+                    : "font-normal text-muted-foreground hover:text-foreground"
+                )}
+              >
+                隐私相册
+              </AppLink>
+            ) : null}
             <AppLink
               href={consoleHref}
               className={cn(
@@ -208,6 +222,15 @@ export function UnifiedNav({ hideThemeToggle = false }: { hideThemeToggle?: bool
             ) : null}
 
             <div className="mt-8 border-t border-border/40 pt-6">
+              {showPrivateLink ? (
+                <AppLink
+                  href="/private"
+                  className="mb-4 block text-[15px] text-muted-foreground transition-colors duration-200 hover:text-foreground"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  隐私相册
+                </AppLink>
+              ) : null}
               <AppLink
                 href={consoleHref}
                 className="text-[15px] text-muted-foreground transition-colors duration-200 hover:text-foreground"

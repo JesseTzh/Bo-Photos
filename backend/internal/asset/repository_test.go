@@ -28,12 +28,45 @@ func TestRepositoryListsOnlyPublicReadyAssets(t *testing.T) {
 	hidden.ShowOnHomepage = true
 	mustCreate(t, repo, hidden)
 
+	private := testAsset("private", StatusReady)
+	private.Visible = true
+	private.Private = true
+	private.ShowOnHomepage = true
+	mustCreate(t, repo, private)
+
 	items, total, err := repo.ListPublic(ctx, PublicFilter{HomepageOnly: true, Page: 1, PageSize: 16})
 	if err != nil {
 		t.Fatalf("ListPublic() error = %v", err)
 	}
 	if total != 1 || len(items) != 1 || items[0].ID != readyVisible.ID {
 		t.Fatalf("ListPublic() = %#v total=%d, want only %q", items, total, readyVisible.ID)
+	}
+}
+
+func TestRepositoryListsPrivateReadyAssets(t *testing.T) {
+	repo := newTestRepository(t)
+	ctx := context.Background()
+
+	private := testAsset("private-ready", StatusReady)
+	private.Visible = true
+	private.Private = true
+	mustCreate(t, repo, private)
+
+	public := testAsset("public-ready", StatusReady)
+	public.Visible = true
+	mustCreate(t, repo, public)
+
+	hiddenPrivate := testAsset("hidden-private", StatusReady)
+	hiddenPrivate.Visible = false
+	hiddenPrivate.Private = true
+	mustCreate(t, repo, hiddenPrivate)
+
+	items, total, err := repo.ListPrivate(ctx, PrivateFilter{Page: 1, PageSize: 16})
+	if err != nil {
+		t.Fatalf("ListPrivate() error = %v", err)
+	}
+	if total != 1 || len(items) != 1 || items[0].ID != private.ID {
+		t.Fatalf("ListPrivate() = %#v total=%d, want only %q", items, total, private.ID)
 	}
 }
 

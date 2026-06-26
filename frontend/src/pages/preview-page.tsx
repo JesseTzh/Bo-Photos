@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { albumPublicHref } from "../features/albums/routes";
 import { useAsset, useGallery } from "../features/assets/api";
+import { fetchAdminAsset, usePrivateAssets } from "../features/assets/admin-api";
 import { useVisit } from "../features/site/api";
 import { usePublicSettings } from "../features/site/api";
+import { useQuery } from "@tanstack/react-query";
 
 function csv(search: URLSearchParams, key: string) {
   return search.get(key)?.split(",").filter(Boolean) ?? [];
@@ -17,7 +19,13 @@ export function PreviewPage() {
   const [search] = useSearchParams();
   const navigate = useNavigate();
   const { message } = AntApp.useApp();
-  const asset = useAsset(id);
+  const privateMode = search.get("private") === "1";
+  const asset = useAsset(id, !privateMode);
+  const privateAsset = useQuery({
+    queryKey: ["assets", "private", id],
+    queryFn: () => fetchAdminAsset(id!),
+    enabled: Boolean(id && privateMode)
+  });
   const album = search.get("album") ?? undefined;
   const cameras = csv(search, "cameras");
   const lenses = csv(search, "lenses");
@@ -34,10 +42,11 @@ export function PreviewPage() {
     tagsOperator,
     sortByShootTime: sort ?? undefined
   });
+  const privateGallery = usePrivateAssets({ page: 1, pageSize: 200 });
   const settings = usePublicSettings();
   const [lightbox, setLightbox] = useState(false);
 
-  const imageList = gallery.data?.items ?? [];
+  const imageList = privateMode ? (privateGallery.data?.items ?? []) : (gallery.data?.items ?? []);
   const currentIndex = useMemo(() => imageList.findIndex((item) => item.id === id), [id, imageList]);
   const previous = currentIndex > 0 ? imageList[currentIndex - 1] : undefined;
   const next = currentIndex >= 0 && currentIndex < imageList.length - 1 ? imageList[currentIndex + 1] : undefined;
@@ -54,13 +63,14 @@ export function PreviewPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [contextSuffix, navigate, next, previous]);
 
-  if (asset.isPending) {
+  const currentAsset = privateMode ? privateAsset : asset;
+  if (currentAsset.isPending) {
     return <div className="page-loading"><Spin size="large" /></div>;
   }
-  if (!asset.data || asset.error) {
+  if (!currentAsset.data || currentAsset.error) {
     return <main className="min-h-screen bg-background p-6"><Alert type="error" message="图片不存在或暂不可见" showIcon /></main>;
   }
-  const item = asset.data;
+  const item = currentAsset.data;
   const imageUrl = item.preview_url || item.thumbnail_url || item.original_url || "";
   const downloadEnabled = settings.data?.public_original_download !== false;
   const exifRows = [

@@ -22,6 +22,7 @@ export interface Asset {
   iso?: string;
   focal_length?: string;
   visible: boolean;
+  private: boolean;
   show_on_homepage: boolean;
   featured: boolean;
   sort: number;
@@ -63,5 +64,6 @@ export interface GalleryQuery {
   album?: string;
   featured?: boolean;
   homepage?: boolean;
+  private?: boolean;
   sortByShootTime?: "asc" | "desc";
 }

@@ -7,6 +7,7 @@ export interface AdminAssetQuery {
   pageSize?: number;
   status?: AssetStatus;
   visible?: boolean;
+  private?: boolean;
   featured?: boolean;
   camera?: string;
   lens?: string;
@@ -35,6 +36,7 @@ export interface AssetUpdate {
   focal_length?: string;
   exif_json?: string;
   visible?: boolean;
+  private?: boolean;
   show_on_homepage?: boolean;
   featured?: boolean;
   sort?: number;
@@ -61,6 +63,17 @@ export function useAdminAssets(query: AdminAssetQuery) {
   return useQuery({
     queryKey: ["assets", "admin", query],
     queryFn: () => apiRequest<AssetPage>(`/admin/assets?${adminSearch(query)}`)
+  });
+}
+
+export function usePrivateAssets(query: { page: number; pageSize?: number }) {
+  const search = new URLSearchParams({
+    page: String(query.page),
+    page_size: String(query.pageSize ?? 16)
+  });
+  return useQuery({
+    queryKey: ["assets", "private", query],
+    queryFn: () => apiRequest<AssetPage>(`/admin/assets/private?${search.toString()}`)
   });
 }
 

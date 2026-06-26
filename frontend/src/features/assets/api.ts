@@ -25,11 +25,11 @@ export function useGallery(query: GalleryQuery) {
   });
 }
 
-export function useAsset(id?: string) {
+export function useAsset(id?: string, enabled = true) {
   return useQuery({
     queryKey: ["assets", "public", id],
     queryFn: () => apiRequest<Asset>(`/public/assets/${id}`),
-    enabled: Boolean(id)
+    enabled: Boolean(id && enabled)
   });
 }
 

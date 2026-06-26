@@ -52,7 +52,7 @@ func (h *Handler) serve(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	if err != nil || item.Status != asset.StatusReady || (!item.Visible && !admin) {
+	if err != nil || item.Status != asset.StatusReady || ((!item.Visible || item.Private) && !admin) {
 		http.NotFound(w, r)
 		return
 	}

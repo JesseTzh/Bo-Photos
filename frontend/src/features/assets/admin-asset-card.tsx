@@ -13,6 +13,7 @@ interface AdminAssetCardProps {
   onDelete: () => void;
   onPurge: () => void;
   onToggleVisible: (value: boolean) => void;
+  onTogglePrivate: (value: boolean) => void;
   onToggleFeatured: (value: boolean) => void;
 }
 
@@ -27,6 +28,7 @@ export function AdminAssetCard({
   onDelete,
   onPurge,
   onToggleVisible,
+  onTogglePrivate,
   onToggleFeatured
 }: AdminAssetCardProps) {
   const imageUrl = asset.thumbnail_url || asset.preview_url;
@@ -68,10 +70,12 @@ export function AdminAssetCard({
         title={<Space><Checkbox checked={selected} onChange={(event) => onSelect(event.target.checked)} />{asset.title || asset.original_name}</Space>}
         description={(
           <Space orientation="vertical" size={8}>
-            <Space wrap><Tag>{asset.status}</Tag>{asset.camera ? <span>{asset.camera}</span> : null}</Space>
+            <Space wrap><Tag>{asset.status}</Tag>{asset.private ? <Tag color="purple">隐私</Tag> : null}{asset.camera ? <span>{asset.camera}</span> : null}</Space>
             <Space wrap>
               <Switch size="small" checked={asset.visible} onChange={onToggleVisible} />
               <span>公开</span>
+              <Switch size="small" checked={asset.private} onChange={onTogglePrivate} />
+              <span>隐私</span>
               <Switch size="small" checked={asset.featured} onChange={onToggleFeatured} />
               <span>精选</span>
             </Space>

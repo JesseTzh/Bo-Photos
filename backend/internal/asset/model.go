@@ -56,6 +56,7 @@ type Asset struct {
 	FocalLength       string
 	ErrorCode         string
 	Visible           bool
+	Private           bool
 	ShowOnHomepage    bool
 	Featured          bool
 	Sort              int
@@ -79,9 +80,15 @@ type PublicFilter struct {
 	PageSize      int
 }
 
+type PrivateFilter struct {
+	Page     int
+	PageSize int
+}
+
 type AdminFilter struct {
 	Status       Status
 	Visible      *bool
+	Private      *bool
 	Featured     *bool
 	Camera       string
 	Lens         string
@@ -131,6 +138,7 @@ type UpdateInput struct {
 	FocalLength    *string       `json:"focal_length"`
 	EXIFJSON       *string       `json:"exif_json"`
 	Visible        *bool         `json:"visible"`
+	Private        *bool         `json:"private"`
 	ShowOnHomepage *bool         `json:"show_on_homepage"`
 	Featured       *bool         `json:"featured"`
 	Sort           *int          `json:"sort"`

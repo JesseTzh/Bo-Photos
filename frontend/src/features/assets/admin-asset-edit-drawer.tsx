@@ -75,6 +75,7 @@ export function AdminAssetEditDrawer({ asset, open, onClose, onSaved }: AdminAss
           <Form.Item name="album_ids" label="相册"><Select mode="multiple" allowClear options={albumOptions} /></Form.Item>
           <Space wrap>
             <Form.Item name="visible" label="公开" valuePropName="checked"><Switch /></Form.Item>
+            <Form.Item name="private" label="隐私" valuePropName="checked"><Switch /></Form.Item>
             <Form.Item name="show_on_homepage" label="首页显示" valuePropName="checked"><Switch /></Form.Item>
             <Form.Item name="featured" label="精选" valuePropName="checked"><Switch /></Form.Item>
             <Form.Item name="sort" label="排序"><InputNumber /></Form.Item>
@@ -152,6 +153,7 @@ function toAssetInput(values: Record<string, unknown>): AssetUpdate {
     focal_length: stringValue(values.focal_length),
     exif_json: stringValue(values.exif_json),
     visible: values.visible as boolean | undefined,
+    private: values.private as boolean | undefined,
     show_on_homepage: values.show_on_homepage as boolean | undefined,
     featured: values.featured as boolean | undefined,
     sort: numberValue(values.sort)

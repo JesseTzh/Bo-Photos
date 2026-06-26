@@ -90,6 +90,34 @@ func TestHiddenMediaRequiresAdministratorAndOriginalSetting(t *testing.T) {
 	}
 }
 
+func TestPrivateMediaRequiresAdministrator(t *testing.T) {
+	repo, local := newMediaTestDependencies(t)
+	item := asset.Asset{
+		ID: "private-media", Status: asset.StatusReady, OriginalName: "private.jpg",
+		OriginalKey: "originals/private.jpg", PreviewKey: "previews/private-v1.webp",
+		SHA256: "private-media", MIMEType: "image/jpeg", Visible: true, Private: true,
+		CreatedAt: testTime(), UpdatedAt: testTime(),
+	}
+	if err := repo.Create(context.Background(), item); err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+	writeMedia(t, local, item.PreviewKey, []byte("preview"))
+
+	public := NewHandler(repo, local, func(context.Context) bool { return false }, true)
+	response := httptest.NewRecorder()
+	public.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/assets/private-media/preview", nil))
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("public private preview status = %d, want 404", response.Code)
+	}
+
+	admin := NewHandler(repo, local, func(context.Context) bool { return true }, true)
+	response = httptest.NewRecorder()
+	admin.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/assets/private-media/preview", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("admin private preview status = %d, want 200", response.Code)
+	}
+}
+
 func newMediaTestDependencies(t *testing.T) (*asset.Repository, *storage.Local) {
 	t.Helper()
 	db, err := repository.Open(context.Background(), filepath.Join(t.TempDir(), "app.db"))

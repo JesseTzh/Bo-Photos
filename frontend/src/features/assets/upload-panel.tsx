@@ -108,6 +108,7 @@ export function UploadPanel({ onAssetReady }: UploadPanelProps) {
               <Form.Item name="description" label="默认描述"><Input.TextArea rows={2} /></Form.Item>
               <Space wrap>
                 <Form.Item name="visible" label="公开" valuePropName="checked"><Switch /></Form.Item>
+                <Form.Item name="private" label="隐私" valuePropName="checked"><Switch /></Form.Item>
                 <Form.Item name="show_on_homepage" label="首页显示" valuePropName="checked"><Switch /></Form.Item>
                 <Form.Item name="featured" label="精选" valuePropName="checked"><Switch /></Form.Item>
                 <Form.Item name="sort" label="排序"><InputNumber /></Form.Item>
@@ -171,6 +172,7 @@ export function UploadPanel({ onAssetReady }: UploadPanelProps) {
           <Form.Item name="tag_ids" label="标签"><Select mode="multiple" allowClear options={tagOptions} /></Form.Item>
           <Space wrap>
             <Form.Item name="visible" label="公开" valuePropName="checked"><Switch /></Form.Item>
+            <Form.Item name="private" label="隐私" valuePropName="checked"><Switch /></Form.Item>
             <Form.Item name="show_on_homepage" label="首页显示" valuePropName="checked"><Switch /></Form.Item>
             <Form.Item name="featured" label="精选" valuePropName="checked"><Switch /></Form.Item>
             <Form.Item name="sort" label="排序"><InputNumber /></Form.Item>
@@ -240,6 +242,7 @@ function normalizeUploadDefaults(values: Partial<UploadMetadataDraft>): UploadMe
     title: emptyToUndefined(values.title),
     description: emptyToUndefined(values.description),
     visible: values.visible ?? true,
+    private: values.private ?? false,
     show_on_homepage: values.show_on_homepage ?? true,
     featured: values.featured ?? false,
     sort: values.sort ?? 0,
@@ -261,6 +264,7 @@ function toAssetUpdate(metadata: UploadMetadataDraft): AssetUpdate {
     title: metadata.title,
     description: metadata.description,
     visible: metadata.visible,
+    private: metadata.private,
     show_on_homepage: metadata.show_on_homepage,
     featured: metadata.featured,
     sort: metadata.sort,

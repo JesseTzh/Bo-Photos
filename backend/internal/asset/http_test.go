@@ -54,6 +54,10 @@ func TestPublicAssetsExcludeHiddenAndProcessing(t *testing.T) {
 	processing := testAsset("processing-api", StatusProcessing)
 	processing.Visible = true
 	mustCreate(t, repo, processing)
+	private := testAsset("private-api", StatusReady)
+	private.Visible = true
+	private.Private = true
+	mustCreate(t, repo, private)
 
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/assets?page=1&page_size=16", nil))
@@ -70,6 +74,46 @@ func TestPublicAssetsExcludeHiddenAndProcessing(t *testing.T) {
 		t.Fatalf("json.Unmarshal() error = %v", err)
 	}
 	if envelope.Data.Total != 1 || len(envelope.Data.Items) != 1 || envelope.Data.Items[0].ID != visible.ID {
+		t.Fatalf("payload = %#v", envelope.Data)
+	}
+}
+
+func TestPublicAssetDetailExcludesPrivate(t *testing.T) {
+	handler, repo, _ := newTestAssetHTTP(t)
+	item := testAsset("private-detail", StatusReady)
+	item.Visible = true
+	item.Private = true
+	mustCreate(t, repo, item)
+
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/assets/private-detail", nil))
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("status = %d body=%s, want 404", response.Code, response.Body.String())
+	}
+}
+
+func TestAdminPrivateAssetsReturnsPrivateItems(t *testing.T) {
+	handler, repo, _ := newTestAssetHTTP(t)
+	item := testAsset("private-admin", StatusReady)
+	item.Visible = true
+	item.Private = true
+	mustCreate(t, repo, item)
+
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/admin/assets/private?page=1&page_size=16", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d body=%s", response.Code, response.Body.String())
+	}
+	var envelope struct {
+		Data struct {
+			Items []AssetDTO `json:"items"`
+			Total int        `json:"total"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(response.Body.Bytes(), &envelope); err != nil {
+		t.Fatalf("json.Unmarshal() error = %v", err)
+	}
+	if envelope.Data.Total != 1 || len(envelope.Data.Items) != 1 || envelope.Data.Items[0].ID != item.ID || !envelope.Data.Items[0].Private {
 		t.Fatalf("payload = %#v", envelope.Data)
 	}
 }
@@ -102,7 +146,7 @@ func TestAdminUpdateMapsSnakeCaseFields(t *testing.T) {
 	request := httptest.NewRequest(
 		http.MethodPatch,
 		"/admin/assets/update-json",
-		bytes.NewBufferString(`{"title":"New title","show_on_homepage":false,"featured":true}`),
+		bytes.NewBufferString(`{"title":"New title","private":true,"show_on_homepage":false,"featured":true}`),
 	)
 	request.Header.Set("Content-Type", "application/json")
 	response := httptest.NewRecorder()
@@ -114,7 +158,7 @@ func TestAdminUpdateMapsSnakeCaseFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Get() error = %v", err)
 	}
-	if updated.Title != "New title" || updated.ShowOnHomepage || !updated.Featured {
+	if updated.Title != "New title" || !updated.Private || updated.ShowOnHomepage || !updated.Featured {
 		t.Fatalf("updated asset = %#v", updated)
 	}
 }

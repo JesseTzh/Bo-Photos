@@ -29,9 +29,9 @@ func (r *Repository) Create(ctx context.Context, item Asset) error {
 			sha256, mime_type, byte_size, width, height, title, description,
 			longitude, latitude, blurhash, exif_json, shoot_at, camera, lens,
 			exposure_time, aperture, iso, focal_length, error_code, visible,
-			show_on_homepage, featured, sort, derivative_version, created_at,
+			private, show_on_homepage, featured, sort, derivative_version, created_at,
 			updated_at, deleted_at, purged_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`,
 		item.ID, item.Status, item.OriginalName, item.OriginalKey,
 		nullString(item.PreviewKey), nullString(item.ThumbnailKey), item.SHA256,
@@ -40,8 +40,8 @@ func (r *Repository) Create(ctx context.Context, item Asset) error {
 		nullString(item.BlurHash), nullString(item.EXIFJSON), nullableTime(item.ShootAt),
 		nullString(item.Camera), nullString(item.Lens), nullString(item.ExposureTime),
 		nullString(item.Aperture), nullString(item.ISO), nullString(item.FocalLength),
-		nullString(item.ErrorCode), item.Visible, item.ShowOnHomepage, item.Featured,
-		item.Sort, item.DerivativeVersion, formatTime(item.CreatedAt),
+		nullString(item.ErrorCode), item.Visible, item.Private, item.ShowOnHomepage,
+		item.Featured, item.Sort, item.DerivativeVersion, formatTime(item.CreatedAt),
 		formatTime(item.UpdatedAt), nullableTime(item.DeletedAt), nullableTime(item.PurgedAt),
 	)
 	if err != nil {
@@ -156,7 +156,7 @@ func (r *Repository) ListPublic(ctx context.Context, filter PublicFilter) ([]Ass
 
 	fromSQL := "assets"
 	selectColumns := assetColumns
-	where := []string{"assets.status = 'ready'", "assets.visible = 1", "assets.deleted_at IS NULL"}
+	where := []string{"assets.status = 'ready'", "assets.visible = 1", "assets.private = 0", "assets.deleted_at IS NULL"}
 	args := make([]any, 0)
 	if filter.HomepageOnly {
 		where = append(where, "assets.show_on_homepage = 1")
@@ -269,6 +269,45 @@ func (r *Repository) ListPublic(ctx context.Context, filter PublicFilter) ([]Ass
 	return items, total, nil
 }
 
+func (r *Repository) ListPrivate(ctx context.Context, filter PrivateFilter) ([]Asset, int, error) {
+	if filter.Page < 1 {
+		filter.Page = 1
+	}
+	if filter.PageSize < 1 || filter.PageSize > 200 {
+		filter.PageSize = 16
+	}
+
+	whereSQL := "status = 'ready' AND visible = 1 AND private = 1 AND deleted_at IS NULL"
+	var total int
+	if err := r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM assets WHERE "+whereSQL).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count private assets: %w", err)
+	}
+
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT `+assetColumns+` FROM assets
+		WHERE `+whereSQL+`
+		ORDER BY sort ASC, shoot_at IS NULL ASC, shoot_at DESC, created_at DESC, id ASC
+		LIMIT ? OFFSET ?
+	`, filter.PageSize, (filter.Page-1)*filter.PageSize)
+	if err != nil {
+		return nil, 0, fmt.Errorf("list private assets: %w", err)
+	}
+	defer rows.Close()
+
+	items := make([]Asset, 0)
+	for rows.Next() {
+		item, err := scanAsset(rows)
+		if err != nil {
+			return nil, 0, err
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("iterate private assets: %w", err)
+	}
+	return items, total, nil
+}
+
 func quoteSQL(value string) string {
 	return "'" + strings.ReplaceAll(value, "'", "''") + "'"
 }
@@ -289,6 +328,10 @@ func (r *Repository) ListAdmin(ctx context.Context, filter AdminFilter) ([]Asset
 	if filter.Visible != nil {
 		where = append(where, "visible = ?")
 		args = append(args, *filter.Visible)
+	}
+	if filter.Private != nil {
+		where = append(where, "private = ?")
+		args = append(args, *filter.Private)
 	}
 	if filter.Featured != nil {
 		where = append(where, "featured = ?")
@@ -422,6 +465,9 @@ func (r *Repository) Update(ctx context.Context, id string, input UpdateInput) e
 	}
 	if input.Visible != nil {
 		add("visible", *input.Visible)
+	}
+	if input.Private != nil {
+		add("private", *input.Private)
 	}
 	if input.ShowOnHomepage != nil {
 		add("show_on_homepage", *input.ShowOnHomepage)
@@ -594,7 +640,7 @@ const assetColumns = `
 	sha256, mime_type, byte_size, width, height, title, description,
 	longitude, latitude, blurhash, exif_json, shoot_at, camera, lens,
 	exposure_time, aperture, iso, focal_length, error_code, visible,
-	show_on_homepage, featured, sort, derivative_version, created_at,
+	private, show_on_homepage, featured, sort, derivative_version, created_at,
 	updated_at, deleted_at, purged_at
 `
 
@@ -615,8 +661,8 @@ func scanAsset(row scanner) (Asset, error) {
 		&previewKey, &thumbnailKey, &item.SHA256, &item.MIMEType, &item.ByteSize,
 		&item.Width, &item.Height, &title, &description, &longitude, &latitude,
 		&blurhash, &exifJSON, &shootAt, &camera, &lens, &exposure, &aperture,
-		&iso, &focal, &errorCode, &item.Visible, &item.ShowOnHomepage,
-		&item.Featured, &item.Sort, &item.DerivativeVersion, &createdAt,
+		&iso, &focal, &errorCode, &item.Visible, &item.Private,
+		&item.ShowOnHomepage, &item.Featured, &item.Sort, &item.DerivativeVersion, &createdAt,
 		&updatedAt, &deletedAt, &purgedAt,
 	)
 	if err != nil {
