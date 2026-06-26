@@ -1,8 +1,6 @@
 services:
   bophotos:
-    build:
-      context: .
-    image: bophotos:local
+    image: jessetzh/bo-photos:latest
     ports:
       - "8080:8080"
     environment:
