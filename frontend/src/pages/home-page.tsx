@@ -61,10 +61,10 @@ export function HomePage() {
                   style={{ backgroundImage: `url(${currentImage.preview_url || currentImage.thumbnail_url})` }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
+                <div className="home-hero-vignette absolute inset-0" />
               </motion.div>
             ) : (
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(217,119,6,0.28),transparent_52%),linear-gradient(315deg,rgba(8,145,178,0.22),transparent_48%),#101217]" />
+              <div className="home-hero-fallback absolute inset-0" />
             )}
           </AnimatePresence>
         </div>
@@ -98,7 +98,7 @@ export function HomePage() {
               </p>
               <h1 className="mb-3 text-4xl font-light leading-[1.1] text-white sm:mb-4 sm:text-5xl md:text-6xl lg:text-7xl">
                 <span className="block">Every Moment</span>
-                <span className="block bg-gradient-to-r from-amber-400 via-orange-400 to-cyan-400 bg-clip-text text-transparent">
+                <span className="home-hero-accent-text block bg-clip-text text-transparent">
                   Tells a Story
                 </span>
               </h1>
@@ -124,7 +124,7 @@ export function HomePage() {
                   </span>
                   <div className="relative hidden h-px max-w-[72px] flex-1 overflow-hidden rounded-full bg-white/15 sm:block">
                     <motion.div
-                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-400/70 to-orange-400/70"
+                      className="home-hero-progress absolute inset-y-0 left-0"
                       animate={{ width: `${((currentIndex + 1) / heroImages.length) * 100}%` }}
                       transition={{ duration: 0.6, ease: "easeInOut" }}
                     />
@@ -218,7 +218,7 @@ export function HomePage() {
                         loading="lazy"
                       />
                     ) : (
-                      <div className="h-full w-full bg-gradient-to-br from-amber-500/25 via-muted to-cyan-600/25" />
+                      <div className="album-cover-fallback h-full w-full" />
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-80" />
                     <div className="absolute inset-x-0 bottom-0 translate-y-4 p-6 transition-transform duration-500 group-hover:translate-y-0">

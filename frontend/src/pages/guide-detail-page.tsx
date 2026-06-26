@@ -20,15 +20,15 @@ const moduleIcons: Record<string, string> = {
   markdown: "📝"
 };
 
-const moduleColors: Record<string, { bg: string; border: string; text: string }> = {
-  expense: { bg: "bg-amber-50/80 dark:bg-amber-900/20", border: "border-l-amber-500", text: "text-amber-700 dark:text-amber-300" },
-  checklist: { bg: "bg-cyan-50/80 dark:bg-cyan-900/20", border: "border-l-cyan-500", text: "text-cyan-700 dark:text-cyan-300" },
-  itinerary: { bg: "bg-amber-50/80 dark:bg-amber-900/20", border: "border-l-amber-500", text: "text-amber-700 dark:text-amber-300" },
-  transport: { bg: "bg-cyan-50/80 dark:bg-cyan-900/20", border: "border-l-cyan-500", text: "text-cyan-700 dark:text-cyan-300" },
-  photo: { bg: "bg-amber-50/80 dark:bg-amber-900/20", border: "border-l-amber-500", text: "text-amber-700 dark:text-amber-300" },
-  tips: { bg: "bg-cyan-50/80 dark:bg-cyan-900/20", border: "border-l-cyan-500", text: "text-cyan-700 dark:text-cyan-300" },
-  text: { bg: "bg-indigo-50/80 dark:bg-indigo-900/20", border: "border-l-indigo-500", text: "text-indigo-700 dark:text-indigo-300" },
-  markdown: { bg: "bg-indigo-50/80 dark:bg-indigo-900/20", border: "border-l-indigo-500", text: "text-indigo-700 dark:text-indigo-300" }
+const moduleToneClasses: Record<string, string> = {
+  expense: "guide-tone-warm",
+  checklist: "guide-tone-cool",
+  itinerary: "guide-tone-warm",
+  transport: "guide-tone-cool",
+  photo: "guide-tone-warm",
+  tips: "guide-tone-cool",
+  text: "guide-tone-neutral",
+  markdown: "guide-tone-neutral"
 };
 
 export function GuideDetailPage() {
@@ -74,21 +74,21 @@ export function GuideDetailPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/20 to-slate-100 pb-24 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 lg:pb-0">
+    <main className="guide-detail-shell min-h-screen pb-24 lg:pb-0">
       <div className="relative h-[70vh] w-full overflow-hidden sm:h-[80vh]">
         <motion.div style={{ y: coverY, opacity: coverOpacity }} className="absolute inset-0">
           {guide.cover_url ? (
             <img src={guide.cover_url} alt={guide.title} className="h-full w-full object-cover" />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/50 via-slate-100 to-indigo-50/50 dark:from-indigo-900/20 dark:via-slate-900 dark:to-indigo-800/20" />
+            <div className="guide-cover-fallback absolute inset-0" />
           )}
         </motion.div>
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-50/40 to-transparent dark:from-slate-950 dark:via-slate-950/40" />
+        <div className="guide-cover-bottom-fade absolute inset-0" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
 
         <AppLink
           href="/guides"
-          className="absolute left-4 top-4 z-10 inline-flex items-center gap-2 rounded-full border border-slate-200/50 bg-white/90 px-4 py-2 text-sm font-medium text-slate-900 shadow-lg backdrop-blur-xl transition-colors hover:bg-white dark:border-slate-700/50 dark:bg-slate-800/90 dark:text-slate-100 dark:hover:bg-slate-700 sm:left-8 sm:top-8"
+          className="absolute left-4 top-4 z-10 inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/90 px-4 py-2 text-sm font-medium text-card-foreground shadow-lg backdrop-blur-xl transition-colors hover:bg-card sm:left-8 sm:top-8"
         >
           <ArrowLeft className="h-4 w-4" />
           <span className="hidden sm:inline">返回列表</span>
@@ -96,16 +96,16 @@ export function GuideDetailPage() {
 
         <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-12 lg:p-16">
           <div className="max-w-4xl">
-            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400 sm:text-sm">
+            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-primary sm:text-sm">
               Travel Guide
             </motion.p>
-            <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-4 text-2xl font-bold leading-tight tracking-tight text-slate-900 dark:text-slate-50 sm:text-4xl lg:text-6xl">
+            <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-4 text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl lg:text-6xl">
               {guide.title}
             </motion.h1>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-600 dark:text-slate-400">
-              <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 text-indigo-500" />{guide.country} · {guide.city}</span>
-              <span className="hidden text-slate-300 dark:text-slate-600 sm:inline">|</span>
-              <span className="inline-flex items-center gap-1.5"><Calendar className="h-4 w-4 text-indigo-500" />{guide.days} 天</span>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 text-primary" />{guide.country} · {guide.city}</span>
+              <span className="hidden text-border sm:inline">|</span>
+              <span className="inline-flex items-center gap-1.5"><Calendar className="h-4 w-4 text-primary" />{guide.days} 天</span>
             </motion.div>
           </div>
         </div>
@@ -122,16 +122,16 @@ export function GuideDetailPage() {
           <section className="min-w-0 flex-1 lg:max-w-[66.666667%]">
             {albums?.length > 0 ? (
               <motion.section initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mb-8 sm:mb-14">
-                <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-400 sm:mb-6 sm:text-sm">
+                <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground sm:mb-6 sm:text-sm">
                   <ImageIcon className="h-4 w-4" />
                   关联相册
                 </h2>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
                   {albums.map((album) => (
                     <AppLink key={album.id} href={albumPublicHref(album.value)} className="group block">
-                      <div className="overflow-hidden rounded-xl border border-slate-200/50 bg-white/60 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-lg dark:border-slate-700/50 dark:bg-slate-800/60 dark:hover:border-indigo-600">
+                      <div className="overflow-hidden rounded-xl border border-border/70 bg-card/70 backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-lg">
                         <div className="relative aspect-[3/2] overflow-hidden">
-                          {album.coverURL ? <img src={album.coverURL} alt={album.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /> : <div className="absolute inset-0 bg-slate-100 dark:bg-slate-700" />}
+                          {album.coverURL ? <img src={album.coverURL} alt={album.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /> : <div className="absolute inset-0 bg-muted" />}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                           <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
                             <p className="truncate text-sm font-semibold text-white sm:text-base">{album.name}</p>
@@ -155,16 +155,16 @@ export function GuideDetailPage() {
       </div>
 
       {modules.length > 0 ? (
-        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200/50 bg-white/90 shadow-lg backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-900/90 lg:hidden">
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/70 bg-background/90 shadow-lg backdrop-blur-xl lg:hidden">
           <div className="flex items-center justify-between px-3 py-2.5">
-            <button onClick={() => setShowMobileNav((value) => !value)} className="flex items-center gap-2 text-sm font-medium text-slate-900 transition-transform active:scale-95 dark:text-slate-100" aria-label="打开目录导航" type="button">
+            <button onClick={() => setShowMobileNav((value) => !value)} className="flex items-center gap-2 text-sm font-medium text-foreground transition-transform active:scale-95" aria-label="打开目录导航" type="button">
               <span className={cn("text-lg transition-transform", showMobileNav && "rotate-180")}>☰</span>
               <span>目录</span>
             </button>
-            {activeModuleId ? <span className="max-w-[50%] truncate text-xs text-slate-600 dark:text-slate-400">{modules.find((module) => module.id === activeModuleId)?.name}</span> : null}
+            {activeModuleId ? <span className="max-w-[50%] truncate text-xs text-muted-foreground">{modules.find((module) => module.id === activeModuleId)?.name}</span> : null}
           </div>
           {showMobileNav ? (
-            <div className="max-h-[60vh] overflow-y-auto overscroll-contain border-t border-slate-200/50 dark:border-slate-700/50">
+            <div className="max-h-[60vh] overflow-y-auto overscroll-contain border-t border-border/70">
               <nav className="space-y-1 p-2">
                 {modules.map((module) => <TocButton key={module.id} module={module} active={activeModuleId === module.id} onClick={() => handleModuleClick(module.id)} />)}
               </nav>
@@ -196,14 +196,14 @@ function Toc({ modules, activeModuleId, onModuleClick }: { modules: GuideModule[
 }
 
 function TocButton({ module, active, onClick }: { module: GuideModule; active: boolean; onClick: () => void }) {
-  const colors = moduleColors[module.template || ""] || moduleColors.tips;
+  const toneClass = moduleToneClasses[module.template || ""] || moduleToneClasses.tips;
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
         "relative flex w-full items-center gap-3 overflow-hidden rounded-xl px-4 py-3 text-left transition-all duration-300",
-        active ? `${colors.bg} ${colors.text} font-medium shadow-sm` : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+        active ? `${toneClass} font-medium shadow-sm` : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
       )}
     >
       {active ? <span className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-current opacity-60" /> : null}
@@ -214,7 +214,7 @@ function TocButton({ module, active, onClick }: { module: GuideModule; active: b
 }
 
 function ModuleView({ module, moduleRefs }: { module: GuideModule; moduleRefs: MutableRefObject<Record<string, HTMLElement | null>> }) {
-  const colors = moduleColors[module.template || ""] || moduleColors.tips;
+  const toneClass = moduleToneClasses[module.template || ""] || moduleToneClasses.tips;
   const icon = moduleIcons[module.template || ""] || "📄";
   return (
     <motion.section
@@ -226,14 +226,14 @@ function ModuleView({ module, moduleRefs }: { module: GuideModule; moduleRefs: M
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.5 }}
-      className={cn("mb-3 overflow-hidden rounded-xl border-l-4 backdrop-blur-xl last:mb-0 sm:mb-8 sm:rounded-2xl", colors.border, colors.bg)}
+      className={cn("mb-3 overflow-hidden rounded-xl border-l-4 backdrop-blur-xl last:mb-0 sm:mb-8 sm:rounded-2xl", toneClass)}
     >
       <div className="p-3 sm:p-6 lg:p-8">
         <div className="mb-3 flex items-center gap-2 sm:mb-6 sm:gap-3">
           <span className="text-lg sm:text-2xl">{icon}</span>
-          <h2 className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-50 sm:text-xl lg:text-2xl">{module.name}</h2>
+          <h2 className="text-base font-bold tracking-tight text-foreground sm:text-xl lg:text-2xl">{module.name}</h2>
         </div>
-        <div className="rounded-lg border border-slate-200/30 bg-white/60 p-2.5 backdrop-blur-sm dark:border-slate-700/30 dark:bg-slate-800/60 sm:rounded-xl sm:p-4 lg:p-6">
+        <div className="rounded-lg border border-border/50 bg-card/70 p-2.5 backdrop-blur-sm sm:rounded-xl sm:p-4 lg:p-6">
           {module.kind === "structured" ? <StructuredView template={module.template} data={module.structured_data} /> : module.blocks?.map((block) => <BlockView key={block.id} block={block} />)}
         </div>
       </div>
@@ -247,17 +247,17 @@ function StructuredView({ template, data }: { template?: string; data: unknown }
   return (
     <div className="space-y-3">
       {items.map((item: any, index) => (
-        <div key={item.id ?? index} className="rounded-xl border border-slate-200/50 bg-white/70 p-4 backdrop-blur transition-all hover:shadow-md dark:border-slate-700/50 dark:bg-slate-800/70">
+        <div key={item.id ?? index} className="rounded-xl border border-border/70 bg-card/80 p-4 backdrop-blur transition-all hover:shadow-md">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100">{item.title ?? item.name ?? item.route ?? `项目 ${index + 1}`}</h3>
-            {template === "expense" ? <b className="text-amber-600 dark:text-amber-400">¥{item.subtotal ?? item.amount ?? 0}</b> : null}
+            <h3 className="font-semibold text-foreground">{item.title ?? item.name ?? item.route ?? `项目 ${index + 1}`}</h3>
+            {template === "expense" ? <b className="text-primary">¥{item.subtotal ?? item.amount ?? 0}</b> : null}
           </div>
           {template === "checklist" && Array.isArray(item.items) ? (
             <div className="space-y-1">
               {item.items.map((value: any) => <Checkbox key={value.id ?? value.text} checked={value.completed}>{value.text}</Checkbox>)}
             </div>
           ) : null}
-          <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600 dark:text-slate-400">{item.description ?? item.text ?? item.notes ?? item.location}</p>
+          <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{item.description ?? item.text ?? item.notes ?? item.location}</p>
           {item.date ? <small className="mt-2 block text-xs text-muted-foreground">{item.date} {item.time}</small> : null}
         </div>
       ))}
@@ -269,19 +269,19 @@ function BlockView({ block }: { block: GuideBlock }) {
   const data = block.data as any;
   switch (block.type) {
     case "markdown":
-      return <p className="mb-3 whitespace-pre-line text-sm leading-relaxed text-slate-700 dark:text-slate-300">{data.text}</p>;
+      return <p className="mb-3 whitespace-pre-line text-sm leading-relaxed text-foreground/90">{data.text}</p>;
     case "image":
       return (
         <figure className="mb-4 sm:mb-8">
           <img src={`/media/assets/${data.asset_id}/preview`} alt={data.caption || ""} className="h-auto w-full rounded-xl" />
-          {data.caption ? <figcaption className="mt-1.5 text-center text-xs text-slate-600 dark:text-slate-400 sm:mt-3">{data.caption}</figcaption> : null}
+          {data.caption ? <figcaption className="mt-1.5 text-center text-xs text-muted-foreground sm:mt-3">{data.caption}</figcaption> : null}
         </figure>
       );
     case "video":
       return <video controls src={data.url} className="w-full rounded-xl" />;
     case "link":
       return (
-        <a href={data.url} target="_blank" rel="noreferrer" className="mb-3 block rounded-xl border border-slate-200/50 bg-white/50 p-4 text-sm transition-colors hover:border-indigo-300 dark:border-slate-700/50 dark:bg-slate-800/50">
+        <a href={data.url} target="_blank" rel="noreferrer" className="mb-3 block rounded-xl border border-border/70 bg-card/70 p-4 text-sm transition-colors hover:border-primary/60">
           <b>{data.title || "链接"}</b>
           <p className="mt-1 text-muted-foreground">{data.description}</p>
         </a>
@@ -291,7 +291,7 @@ function BlockView({ block }: { block: GuideBlock }) {
     case "warning":
       return <Alert type={data.level === "warning" ? "warning" : "info"} message={data.title} description={data.text} showIcon className="mb-3" />;
     case "divider":
-      return <hr className="my-4 border-slate-200/50 dark:border-slate-700/50" />;
+      return <hr className="my-4 border-border/70" />;
     default:
       return null;
   }

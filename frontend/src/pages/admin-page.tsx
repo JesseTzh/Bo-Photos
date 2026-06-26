@@ -14,6 +14,7 @@ import { Button, Layout, Menu, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import { Outlet, useLocation } from "react-router-dom";
 import { useLogout } from "../features/auth/api";
+import { useTheme } from "../shared/adapters/theme";
 
 const navigation = [
   { key: "dashboard", icon: <DashboardOutlined />, label: "仪表盘" },
@@ -30,6 +31,7 @@ export function AdminPage() {
   const logout = useLogout();
   const navigate = useNavigate();
   const location = useLocation();
+  const { resolvedTheme } = useTheme();
 
   async function signOut() {
     await logout.mutateAsync();
@@ -44,7 +46,7 @@ export function AdminPage() {
           <span>BoPhoto</span>
         </button>
         <Menu
-          theme="light"
+          theme={resolvedTheme}
           mode="inline"
           selectedKeys={[location.pathname === "/admin" ? "dashboard" : location.pathname.split("/")[2] || "dashboard"]}
           items={navigation.map((item) => ({
