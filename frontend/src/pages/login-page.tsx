@@ -34,9 +34,6 @@ export function LoginPage() {
     <AuthLayout>
       {contextHolder}
       <Typography.Title level={2}>管理员登录</Typography.Title>
-      <Typography.Paragraph type="secondary">
-        输入初始化时设置的密码。
-      </Typography.Paragraph>
       <Form<LoginForm> layout="vertical" onFinish={submit} requiredMark={false}>
         <Form.Item
           label="密码"

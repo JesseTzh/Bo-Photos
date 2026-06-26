@@ -254,80 +254,22 @@ select {
 
 .auth-shell {
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(360px, 0.88fr);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.5rem, 5vw, 4rem);
   background: var(--background);
 }
 
-.auth-intro,
 .auth-panel {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: clamp(2rem, 7vw, 7rem);
-}
-
-.auth-intro {
-  position: relative;
-  overflow: hidden;
-  color: white;
-  background:
-    linear-gradient(135deg, rgb(0 0 0 / 62%), rgb(0 0 0 / 24%)),
-    linear-gradient(135deg, #1a1d25, #3f2b12 52%, #083842);
-}
-
-.auth-intro::after {
-  content: "";
-  position: absolute;
-  right: -10rem;
-  bottom: -12rem;
-  width: 28rem;
-  height: 28rem;
-  border: 1px solid rgb(251 191 36 / 30%);
-  border-radius: 50%;
-  box-shadow: 0 0 0 4rem rgb(217 119 6 / 8%), 0 0 0 8rem rgb(8 145 178 / 5%);
-}
-
-.brand-mark {
-  width: 3.5rem;
-  height: 3.5rem;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgb(255 255 255 / 32%);
-  border-radius: 1rem;
-  color: #fbbf24;
-  font-size: 1.5rem;
-}
-
-.eyebrow {
-  color: var(--primary);
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-}
-
-.auth-intro h1 {
-  max-width: 13ch;
-  margin: 1rem 0;
-  color: white;
-  font-size: clamp(2.4rem, 5vw, 5.4rem);
-  font-weight: 300;
-  line-height: 1.05;
-  letter-spacing: 0;
-}
-
-.auth-copy {
-  max-width: 32rem;
-  color: rgb(255 255 255 / 66%);
-  font-size: 1.05rem;
-  line-height: 1.8;
 }
 
 .auth-panel {
   width: 100%;
-  max-width: 36rem;
-  margin: auto;
+  max-width: 24rem;
 }
 
 /* Ant Design compatibility for the migrated admin shell. */
@@ -854,15 +796,7 @@ select {
 
 @media (max-width: 800px) {
   .auth-shell {
-    grid-template-columns: 1fr;
-  }
-
-  .auth-intro {
-    min-height: 40vh;
-  }
-
-  .auth-intro h1 {
-    font-size: clamp(2.2rem, 11vw, 4rem);
+    padding: 1.25rem;
   }
 
   .asset-toolbar {
