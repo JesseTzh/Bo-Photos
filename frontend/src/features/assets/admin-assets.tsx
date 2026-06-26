@@ -7,7 +7,7 @@ import { AdminAssetEditDrawer } from "./admin-asset-edit-drawer";
 import { AdminAssetFilters, defaultAdminAssetFilters, type AdminAssetFilterState } from "./admin-asset-filters";
 import { AdminAssetListRow } from "./admin-asset-list-row";
 import { AdminAssetViewDrawer } from "./admin-asset-view-drawer";
-import { type AdminAssetQuery, useAdminAssets, useDeleteAssets, useRestoreAsset, useRetryAsset, useUpdateAsset } from "./admin-api";
+import { type AdminAssetQuery, useAdminAssets, useDeleteAssets, usePurgeAsset, useRestoreAsset, useRetryAsset, useUpdateAsset } from "./admin-api";
 import type { Asset } from "./schema";
 
 interface AdminAssetsProps {
@@ -26,6 +26,7 @@ export function AdminAssets({ refreshToken = 0 }: AdminAssetsProps) {
   const [editing, setEditing] = useState<Asset>();
   const [messageApi, contextHolder] = message.useMessage();
   const remove = useDeleteAssets();
+  const purge = usePurgeAsset();
   const restore = useRestoreAsset();
   const retry = useRetryAsset();
   const update = useUpdateAsset();
@@ -71,6 +72,16 @@ export function AdminAssets({ refreshToken = 0 }: AdminAssetsProps) {
     await remove.mutateAsync(ids);
     setSelected(new Set());
     messageApi.success("图片已删除");
+  }
+
+  async function purgeItem(id: string) {
+    await purge.mutateAsync(id);
+    setSelected((current) => {
+      const next = new Set(current);
+      next.delete(id);
+      return next;
+    });
+    messageApi.success("图片已彻底删除");
   }
 
   async function toggleAsset(asset: Asset, input: Pick<Asset, "visible"> | Pick<Asset, "featured">) {
@@ -124,6 +135,7 @@ export function AdminAssets({ refreshToken = 0 }: AdminAssetsProps) {
               onRetry={() => void retry.mutateAsync(item.id)}
               onRestore={() => void restore.mutateAsync(item.id)}
               onDelete={() => void deleteItems([item.id])}
+              onPurge={() => void purgeItem(item.id)}
               onToggleVisible={(visible) => void toggleAsset(item, { visible })}
               onToggleFeatured={(featured) => void toggleAsset(item, { featured })}
             />
@@ -142,6 +154,7 @@ export function AdminAssets({ refreshToken = 0 }: AdminAssetsProps) {
               onRetry={() => void retry.mutateAsync(item.id)}
               onRestore={() => void restore.mutateAsync(item.id)}
               onDelete={() => void deleteItems([item.id])}
+              onPurge={() => void purgeItem(item.id)}
               onToggleVisible={(visible) => void toggleAsset(item, { visible })}
               onToggleFeatured={(featured) => void toggleAsset(item, { featured })}
             />

@@ -199,6 +199,20 @@ func (s *Service) Delete(ctx context.Context, id string) error {
 	return s.repository.Transition(ctx, id, StatusDeleted, "")
 }
 
+func (s *Service) Purge(ctx context.Context, id string) error {
+	item, err := s.repository.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	if item.Status != StatusDeleted {
+		return ErrInvalidTransition
+	}
+	if err := s.storage.Purge(item.OriginalKey, item.PreviewKey, item.ThumbnailKey); err != nil {
+		return err
+	}
+	return s.repository.Transition(ctx, id, StatusPurged, "")
+}
+
 func (s *Service) Restore(ctx context.Context, id string) error {
 	return s.repository.Transition(ctx, id, StatusReady, "")
 }

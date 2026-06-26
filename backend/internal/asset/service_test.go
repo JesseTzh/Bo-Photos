@@ -177,6 +177,62 @@ func TestServiceRetryIncrementsDerivativeVersion(t *testing.T) {
 	}
 }
 
+func TestServicePurgeDeletesFilesAndMarksPurged(t *testing.T) {
+	service, repo, local, _ := newTestAssetService(t, imageproc.Metadata{}, nil)
+	upload, err := service.Upload(
+		context.Background(),
+		"photo.jpg",
+		bytes.NewReader(append([]byte{0xff, 0xd8, 0xff, 0xe0}, []byte("purge")...)),
+	)
+	if err != nil {
+		t.Fatalf("Upload() error = %v", err)
+	}
+	service.Process(context.Background(), upload.Asset.ID)
+	item, err := repo.Get(context.Background(), upload.Asset.ID)
+	if err != nil {
+		t.Fatalf("Get() error = %v", err)
+	}
+	if err := service.Delete(context.Background(), item.ID); err != nil {
+		t.Fatalf("Delete() error = %v", err)
+	}
+
+	if err := service.Purge(context.Background(), item.ID); err != nil {
+		t.Fatalf("Purge() error = %v", err)
+	}
+
+	purged, err := repo.Get(context.Background(), item.ID)
+	if err != nil {
+		t.Fatalf("Get(purged) error = %v", err)
+	}
+	if purged.Status != StatusPurged || purged.PurgedAt == nil {
+		t.Fatalf("purged item = %#v", purged)
+	}
+	for _, key := range []string{item.OriginalKey, item.PreviewKey, item.ThumbnailKey} {
+		path, err := local.Resolve(key)
+		if err != nil {
+			t.Fatalf("Resolve(%q) error = %v", key, err)
+		}
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			t.Errorf("file %q still exists or stat error = %v", key, err)
+		}
+	}
+}
+
+func TestServicePurgeRequiresDeletedStatus(t *testing.T) {
+	service, _, _, _ := newTestAssetService(t, imageproc.Metadata{}, nil)
+	upload, err := service.Upload(
+		context.Background(),
+		"photo.jpg",
+		bytes.NewReader(append([]byte{0xff, 0xd8, 0xff, 0xe0}, []byte("not-deleted")...)),
+	)
+	if err != nil {
+		t.Fatalf("Upload() error = %v", err)
+	}
+	if err := service.Purge(context.Background(), upload.Asset.ID); !errors.Is(err, ErrInvalidTransition) {
+		t.Fatalf("Purge() error = %v, want ErrInvalidTransition", err)
+	}
+}
+
 type fakeQueue struct {
 	ids []string
 }

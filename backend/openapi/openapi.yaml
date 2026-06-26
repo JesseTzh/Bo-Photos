@@ -241,6 +241,15 @@ paths:
       responses:
         "204":
           description: Soft-deleted asset restored
+  /admin/assets/{id}/purge:
+    post:
+      operationId: purgeAsset
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+      responses:
+        "204":
+          description: Deleted asset permanently purged
   /admin/assets/{id}/albums:
     get:
       operationId: getAssetAlbums

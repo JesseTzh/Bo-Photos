@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -115,6 +116,35 @@ func TestAdminUpdateMapsSnakeCaseFields(t *testing.T) {
 	}
 	if updated.Title != "New title" || updated.ShowOnHomepage || !updated.Featured {
 		t.Fatalf("updated asset = %#v", updated)
+	}
+}
+
+func TestAdminPurgeDeletedAsset(t *testing.T) {
+	handler, repo, local := newTestAssetHTTP(t)
+	item := testAsset("purge-api", StatusDeleted)
+	mustCreate(t, repo, item)
+	path, err := local.Resolve(item.OriginalKey)
+	if err != nil {
+		t.Fatalf("Resolve() error = %v", err)
+	}
+	if err := os.WriteFile(path, []byte("original"), 0o644); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/admin/assets/purge-api/purge", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d body=%s", response.Code, response.Body.String())
+	}
+	updated, err := repo.Get(context.Background(), item.ID)
+	if err != nil {
+		t.Fatalf("Get() error = %v", err)
+	}
+	if updated.Status != StatusPurged {
+		t.Fatalf("status = %q, want purged", updated.Status)
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Fatalf("original file stat error = %v, want not exist", err)
 	}
 }
 

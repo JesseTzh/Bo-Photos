@@ -134,6 +134,12 @@ export function useRestoreAsset() {
   );
 }
 
+export function usePurgeAsset() {
+  return useAssetMutation((id: string) =>
+    apiRequest<void>(`/admin/assets/${id}/purge`, { method: "POST" })
+  );
+}
+
 export function useRetryAsset() {
   return useAssetMutation((id: string) =>
     apiRequest<void>(`/admin/assets/${id}/retry`, { method: "POST" })

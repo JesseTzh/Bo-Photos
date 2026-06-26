@@ -1,5 +1,5 @@
 import { DeleteOutlined, EditOutlined, EyeOutlined, ReloadOutlined, UndoOutlined } from "@ant-design/icons";
-import { Button, Checkbox, Space, Switch, Tag, Tooltip } from "antd";
+import { Button, Checkbox, Popconfirm, Space, Switch, Tag, Tooltip } from "antd";
 import type { Asset } from "./schema";
 
 interface AdminAssetListRowProps {
@@ -11,6 +11,7 @@ interface AdminAssetListRowProps {
   onRetry: () => void;
   onRestore: () => void;
   onDelete: () => void;
+  onPurge: () => void;
   onToggleVisible: (value: boolean) => void;
   onToggleFeatured: (value: boolean) => void;
 }
@@ -24,6 +25,7 @@ export function AdminAssetListRow({
   onRetry,
   onRestore,
   onDelete,
+  onPurge,
   onToggleVisible,
   onToggleFeatured
 }: AdminAssetListRowProps) {
@@ -53,7 +55,21 @@ export function AdminAssetListRow({
           <Tooltip title="查看"><Button icon={<EyeOutlined />} onClick={onView} /></Tooltip>
           <Tooltip title="编辑"><Button icon={<EditOutlined />} onClick={onEdit} /></Tooltip>
           {asset.status === "failed" || asset.status === "ready" ? <Tooltip title="重试"><Button icon={<ReloadOutlined />} onClick={onRetry} /></Tooltip> : null}
-          {asset.status === "deleted" ? <Tooltip title="恢复"><Button icon={<UndoOutlined />} onClick={onRestore} /></Tooltip> : <Tooltip title="删除"><Button danger icon={<DeleteOutlined />} onClick={onDelete} /></Tooltip>}
+          {asset.status === "deleted" ? (
+            <>
+              <Tooltip title="恢复"><Button icon={<UndoOutlined />} onClick={onRestore} /></Tooltip>
+              <Popconfirm
+                title="彻底删除图片？"
+                description="将立即删除原图和衍生图，无法恢复。"
+                okText="彻底删除"
+                cancelText="取消"
+                okButtonProps={{ danger: true }}
+                onConfirm={onPurge}
+              >
+                <Tooltip title="彻底删除"><Button danger icon={<DeleteOutlined />} /></Tooltip>
+              </Popconfirm>
+            </>
+          ) : <Tooltip title="删除"><Button danger icon={<DeleteOutlined />} onClick={onDelete} /></Tooltip>}
         </Space>
       </div>
     </div>

@@ -74,6 +74,7 @@ func (h *HTTPHandler) AdminRoutes(register ...func(chi.Router)) http.Handler {
 	router.Get("/{id}/albums", h.assetAlbums)
 	router.Put("/{id}/albums", h.saveAssetAlbums)
 	router.Post("/{id}/restore", h.restore)
+	router.Post("/{id}/purge", h.purge)
 	router.Post("/{id}/retry", h.retry)
 	router.Delete("/", h.batchDelete)
 	router.Get("/{id}", h.getAdmin)
@@ -189,6 +190,14 @@ func (h *HTTPHandler) delete(w http.ResponseWriter, r *http.Request) {
 func (h *HTTPHandler) restore(w http.ResponseWriter, r *http.Request) {
 	if err := h.service.Restore(r.Context(), chi.URLParam(r, "id")); err != nil {
 		writeAssetError(w, r, http.StatusUnprocessableEntity, "ASSET_RESTORE_FAILED", err.Error())
+		return
+	}
+	writeAssetJSON(w, http.StatusOK, nil)
+}
+
+func (h *HTTPHandler) purge(w http.ResponseWriter, r *http.Request) {
+	if err := h.service.Purge(r.Context(), chi.URLParam(r, "id")); err != nil {
+		writeAssetError(w, r, http.StatusUnprocessableEntity, "ASSET_PURGE_FAILED", err.Error())
 		return
 	}
 	writeAssetJSON(w, http.StatusOK, nil)
