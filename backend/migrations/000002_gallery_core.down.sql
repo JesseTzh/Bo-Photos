@@ -1,0 +1,11 @@
+DROP TABLE IF EXISTS asset_tags;
+DROP TABLE IF EXISTS tags;
+DROP TABLE IF EXISTS album_assets;
+DROP TABLE IF EXISTS albums;
+DROP INDEX IF EXISTS assets_sha256_idx;
+DROP INDEX IF EXISTS assets_shoot_at_idx;
+DROP INDEX IF EXISTS assets_featured_idx;
+DROP INDEX IF EXISTS assets_lens_idx;
+DROP INDEX IF EXISTS assets_camera_idx;
+DROP INDEX IF EXISTS assets_public_idx;
+DROP TABLE IF EXISTS assets;

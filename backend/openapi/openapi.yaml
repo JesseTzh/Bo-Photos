@@ -1,0 +1,1040 @@
+openapi: 3.1.0
+info:
+  title: BoPhoto API
+  version: 1.0.0
+servers:
+  - url: /api/v1
+paths:
+  /auth/login:
+    post:
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordRequest"
+      responses:
+        "204":
+          description: Login succeeded
+        "401":
+          $ref: "#/components/responses/APIError"
+        "429":
+          $ref: "#/components/responses/APIError"
+  /auth/logout:
+    post:
+      operationId: logout
+      responses:
+        "204":
+          description: Session destroyed
+  /auth/session:
+    get:
+      operationId: getAuthSession
+      responses:
+        "200":
+          description: Current initialization and authentication state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthState"
+  /admin/password:
+    put:
+      operationId: changePassword
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+      responses:
+        "204":
+          description: Password changed and all sessions revoked
+        "401":
+          $ref: "#/components/responses/APIError"
+        "422":
+          $ref: "#/components/responses/APIError"
+  /admin/ping:
+    get:
+      operationId: adminPing
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: Authenticated administrator
+        "401":
+          $ref: "#/components/responses/APIError"
+  /public/assets:
+    get:
+      operationId: listPublicAssets
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: page_size, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 16 } }
+        - { name: cameras, in: query, schema: { type: string } }
+        - { name: lenses, in: query, schema: { type: string } }
+        - { name: tags, in: query, schema: { type: string } }
+        - { name: tags_operator, in: query, schema: { type: string, enum: [and, or], default: and } }
+        - { name: album, in: query, schema: { type: string } }
+        - { name: featured, in: query, schema: { type: boolean } }
+        - { name: homepage, in: query, schema: { type: boolean } }
+        - { name: sort_by_shoot_time, in: query, schema: { type: string, enum: [asc, desc] } }
+      responses:
+        "200":
+          description: Public ready and visible assets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetPage"
+  /public/assets/filters:
+    get:
+      operationId: getAssetFilterOptions
+      responses:
+        "200":
+          description: Distinct camera and lens values
+  /public/assets/{id}:
+    get:
+      operationId: getPublicAsset
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+      responses:
+        "200":
+          description: Public asset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "404":
+          $ref: "#/components/responses/APIError"
+  /public/albums:
+    get:
+      operationId: listPublicAlbums
+      responses:
+        "200":
+          description: Public visible albums
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlbumList"
+  /public/albums/{value}:
+    get:
+      operationId: getPublicAlbum
+      parameters:
+        - $ref: "#/components/parameters/AlbumValue"
+      responses:
+        "200":
+          description: Public album
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Album"
+        "404":
+          $ref: "#/components/responses/APIError"
+  /public/tags:
+    get:
+      operationId: listPublicTags
+      responses:
+        "200":
+          description: Public tag tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TagList"
+  /admin/assets:
+    get:
+      operationId: listAdminAssets
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: page_size, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 20 } }
+        - { name: status, in: query, schema: { type: string, enum: [processing, ready, failed, deleted, purged] } }
+        - { name: visible, in: query, schema: { type: boolean } }
+        - { name: featured, in: query, schema: { type: boolean } }
+        - { name: camera, in: query, schema: { type: string } }
+        - { name: lens, in: query, schema: { type: string } }
+        - { name: exposure_time, in: query, schema: { type: string } }
+        - { name: aperture, in: query, schema: { type: string } }
+        - { name: iso, in: query, schema: { type: string } }
+        - { name: album, in: query, schema: { type: string } }
+        - { name: tags, in: query, schema: { type: string } }
+        - { name: tags_operator, in: query, schema: { type: string, enum: [and, or], default: and } }
+        - { name: title, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: Administrator asset page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetPage"
+    post:
+      operationId: uploadAsset
+      security: [{ sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "202":
+          description: Upload accepted; duplicate IDs are warning-only
+    delete:
+      operationId: batchDeleteAssets
+      security: [{ sessionCookie: [] }]
+      responses:
+        "204":
+          description: Assets soft-deleted
+  /admin/assets/filters:
+    get:
+      operationId: getAdminAssetFilterOptions
+      security: [{ sessionCookie: [] }]
+      responses:
+        "200":
+          description: Distinct admin asset filter values
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAssetFilterOptions"
+  /admin/assets/{id}:
+    get:
+      operationId: getAdminAsset
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+      responses:
+        "200":
+          description: Asset including hidden and failed states
+    patch:
+      operationId: updateAsset
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+      responses:
+        "204":
+          description: Asset updated
+    delete:
+      operationId: deleteAsset
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+      responses:
+        "204":
+          description: Asset soft-deleted
+  /admin/assets/{id}/retry:
+    post:
+      operationId: retryAsset
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+      responses:
+        "202":
+          description: Processing retry queued
+  /admin/assets/{id}/restore:
+    post:
+      operationId: restoreAsset
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+      responses:
+        "204":
+          description: Soft-deleted asset restored
+  /admin/assets/{id}/albums:
+    get:
+      operationId: getAssetAlbums
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+      responses:
+        "200":
+          description: Album IDs containing this asset
+    put:
+      operationId: replaceAssetAlbums
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [album_ids]
+              properties:
+                album_ids:
+                  type: array
+                  items: { type: string }
+      responses:
+        "204":
+          description: Asset album membership replaced
+  /admin/assets/sort:
+    put:
+      operationId: sortAssets
+      security: [{ sessionCookie: [] }]
+      responses:
+        "204":
+          description: Global asset sort updated
+  /admin/assets/{id}/tags:
+    get:
+      operationId: getAssetTags
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+      responses:
+        "200":
+          description: Asset tag IDs including implied ancestors
+    put:
+      operationId: replaceAssetTags
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AssetID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tag_ids]
+              properties:
+                tag_ids:
+                  type: array
+                  items: { type: string }
+      responses:
+        "204":
+          description: Asset tags replaced and ancestors synchronized
+  /admin/albums:
+    get:
+      operationId: listAdminAlbums
+      security: [{ sessionCookie: [] }]
+      responses:
+        "200":
+          description: All active albums
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlbumList"
+    post:
+      operationId: createAlbum
+      security: [{ sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlbumInput"
+      responses:
+        "201":
+          description: Album created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Album"
+  /admin/albums/sort:
+    put:
+      operationId: sortAlbums
+      security: [{ sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids]
+              properties:
+                ids:
+                  type: array
+                  items: { type: string }
+      responses:
+        "204":
+          description: Album order updated
+  /admin/albums/{id}:
+    get:
+      operationId: getAdminAlbum
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AlbumID"
+      responses:
+        "200":
+          description: Album
+    put:
+      operationId: updateAlbum
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AlbumID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlbumInput"
+      responses:
+        "200":
+          description: Album updated
+    delete:
+      operationId: deleteAlbum
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AlbumID"
+      responses:
+        "204":
+          description: Album soft-deleted
+  /admin/albums/{id}/assets:
+    get:
+      operationId: listAlbumAssets
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AlbumID"
+      responses:
+        "200":
+          description: Assets associated with an album
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AlbumAsset"
+    put:
+      operationId: replaceAlbumAssets
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AlbumID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [asset_ids]
+              properties:
+                asset_ids:
+                  type: array
+                  items: { type: string }
+      responses:
+        "204":
+          description: Album assets replaced in supplied order
+  /admin/albums/{id}/cover:
+    put:
+      operationId: setAlbumCover
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AlbumID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                asset_id: { type: string }
+      responses:
+        "204":
+          description: Album cover updated or cleared
+  /admin/albums/{id}/assets/sort:
+    put:
+      operationId: sortAlbumAssets
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AlbumID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orders]
+              properties:
+                orders:
+                  type: array
+                  items:
+                    type: object
+                    required: [asset_id, sort]
+                    properties:
+                      asset_id: { type: string }
+                      sort: { type: integer }
+      responses:
+        "204":
+          description: Album asset order updated
+  /admin/albums/{id}/assets/sort/reset:
+    post:
+      operationId: resetAlbumAssetSort
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/AlbumID"
+      responses:
+        "204":
+          description: Album asset order reset
+  /admin/tags:
+    get:
+      operationId: listAdminTags
+      security: [{ sessionCookie: [] }]
+      responses:
+        "200":
+          description: Tag tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TagList"
+    post:
+      operationId: createTag
+      security: [{ sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TagCreateInput"
+      responses:
+        "201":
+          description: Tag created
+  /admin/tags/{id}:
+    put:
+      operationId: updateTag
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/TagID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TagUpdateInput"
+      responses:
+        "204":
+          description: Tag updated
+    delete:
+      operationId: deleteTag
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/TagID"
+      responses:
+        "204":
+          description: Tag deleted
+        "409":
+          description: Tag still has children
+  /admin/tags/{id}/parent:
+    put:
+      operationId: moveTag
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - $ref: "#/components/parameters/TagID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [parent_id]
+              properties:
+                parent_id: { type: string }
+      responses:
+        "204":
+          description: Tag moved without creating a cycle
+  /public/guides:
+    get:
+      operationId: listPublicGuides
+      responses:
+        "200": { description: Published Guides }
+  /public/guides/{id}:
+    get:
+      operationId: getPublicGuide
+      parameters: [{ $ref: "#/components/parameters/GuideID" }]
+      responses:
+        "200": { description: Published Guide with modules, TOC, and albums }
+        "404": { $ref: "#/components/responses/APIError" }
+  /public/settings:
+    get:
+      operationId: getPublicSettings
+      responses:
+        "200":
+          description: Public site settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicSettings" }
+  /public/visits:
+    post:
+      operationId: recordVisit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VisitInput" }
+      responses:
+        "204": { description: Visit accepted or analytics disabled }
+  /admin/guides:
+    get:
+      operationId: listAdminGuides
+      security: [{ sessionCookie: [] }]
+      responses:
+        "200": { description: Guide list }
+    post:
+      operationId: createGuide
+      security: [{ sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GuideInput" }
+      responses:
+        "201": { description: Guide created }
+  /admin/dashboard:
+    get:
+      operationId: getDashboard
+      security: [{ sessionCookie: [] }]
+      responses:
+        "200":
+          description: Dashboard aggregates
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Dashboard" }
+  /admin/analytics:
+    get:
+      operationId: getAnalytics
+      security: [{ sessionCookie: [] }]
+      responses:
+        "200":
+          description: Visit analytics
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Analytics" }
+  /admin/settings:
+    get:
+      operationId: getAdminSettings
+      security: [{ sessionCookie: [] }]
+      responses:
+        "200":
+          description: Typed settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SiteSettings" }
+    put:
+      operationId: updateAdminSettings
+      security: [{ sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SiteSettings" }
+      responses:
+        "204": { description: Settings updated }
+  /admin/disk:
+    get:
+      operationId: getDiskUsage
+      security: [{ sessionCookie: [] }]
+      responses:
+        "200": { description: Data filesystem usage }
+  /admin/guides/{id}:
+    get:
+      operationId: getAdminGuide
+      security: [{ sessionCookie: [] }]
+      parameters: [{ $ref: "#/components/parameters/GuideID" }]
+      responses:
+        "200": { description: Guide editor payload }
+    put:
+      operationId: updateGuide
+      security: [{ sessionCookie: [] }]
+      parameters: [{ $ref: "#/components/parameters/GuideID" }]
+      responses:
+        "200": { description: Guide updated }
+    delete:
+      operationId: deleteGuide
+      security: [{ sessionCookie: [] }]
+      parameters: [{ $ref: "#/components/parameters/GuideID" }]
+      responses:
+        "204": { description: Guide soft-deleted }
+  /admin/guides/{id}/modules:
+    get:
+      operationId: listGuideModules
+      security: [{ sessionCookie: [] }]
+      parameters: [{ $ref: "#/components/parameters/GuideID" }]
+      responses:
+        "200": { description: Ordered modules }
+    post:
+      operationId: createGuideModule
+      security: [{ sessionCookie: [] }]
+      parameters: [{ $ref: "#/components/parameters/GuideID" }]
+      responses:
+        "201": { description: Module created }
+  /admin/guides/{id}/toc:
+    get:
+      operationId: getGuideTOC
+      security: [{ sessionCookie: [] }]
+      parameters: [{ $ref: "#/components/parameters/GuideID" }]
+      responses:
+        "200": { description: Ordered TOC }
+    put:
+      operationId: replaceGuideTOC
+      security: [{ sessionCookie: [] }]
+      parameters: [{ $ref: "#/components/parameters/GuideID" }]
+      responses:
+        "204": { description: TOC replaced }
+  /admin/guides/{id}/albums:
+    get:
+      operationId: getGuideAlbums
+      security: [{ sessionCookie: [] }]
+      parameters: [{ $ref: "#/components/parameters/GuideID" }]
+      responses:
+        "200": { description: Ordered related albums }
+    put:
+      operationId: replaceGuideAlbums
+      security: [{ sessionCookie: [] }]
+      parameters: [{ $ref: "#/components/parameters/GuideID" }]
+      responses:
+        "204": { description: Related albums replaced }
+components:
+  parameters:
+    AssetID:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    AlbumID:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    AlbumValue:
+      name: value
+      in: path
+      required: true
+      schema: { type: string }
+    TagID:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    GuideID:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: bophotos_session
+  schemas:
+    Asset:
+      type: object
+      required: [id, status, original_name, width, height, visible, show_on_homepage, featured, sort]
+      properties:
+        id: { type: string }
+        status: { type: string, enum: [processing, ready, failed, deleted, purged] }
+        original_name: { type: string }
+        mime_type: { type: string }
+        byte_size: { type: integer }
+        width: { type: integer }
+        height: { type: integer }
+        title: { type: string }
+        description: { type: string }
+        longitude: { type: number }
+        latitude: { type: number }
+        blurhash: { type: string }
+        exif_json: { type: string }
+        shoot_at: { type: string, format: date-time }
+        camera: { type: string }
+        lens: { type: string }
+        exposure_time: { type: string }
+        aperture: { type: string }
+        iso: { type: string }
+        focal_length: { type: string }
+        visible: { type: boolean }
+        show_on_homepage: { type: boolean }
+        featured: { type: boolean }
+        sort: { type: integer }
+        thumbnail_url: { type: string }
+        preview_url: { type: string }
+        original_url: { type: string }
+        error_code: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    AdminAssetFilterOptions:
+      type: object
+      required: [cameras, lenses, exposure_times, apertures, isos]
+      properties:
+        cameras:
+          type: array
+          items: { type: string }
+        lenses:
+          type: array
+          items: { type: string }
+        exposure_times:
+          type: array
+          items: { type: string }
+        apertures:
+          type: array
+          items: { type: string }
+        isos:
+          type: array
+          items: { type: string }
+    AssetPage:
+      type: object
+      required: [page, page_size, total, items]
+      properties:
+        page: { type: integer }
+        page_size: { type: integer }
+        total: { type: integer }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Asset"
+    Album:
+      type: object
+      required: [id, name, album_value, visible, sort, random_show, image_sorting, asset_ids, asset_count]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        album_value: { type: string }
+        detail: { type: string }
+        theme: { type: string }
+        visible: { type: boolean }
+        sort: { type: integer }
+        random_show: { type: boolean }
+        license: { type: string }
+        cover_asset_id: { type: string }
+        cover_url: { type: string }
+        image_sorting:
+          type: integer
+          enum: [1, 2, 3, 4]
+          description: 1 upload desc, 2 shoot desc, 3 upload asc, 4 shoot asc
+        asset_ids:
+          type: array
+          items: { type: string }
+        asset_count: { type: integer }
+    AlbumInput:
+      type: object
+      required: [name, album_value]
+      properties:
+        name: { type: string }
+        album_value:
+          type: string
+          pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        detail: { type: string }
+        theme: { type: string }
+        visible: { type: boolean }
+        sort: { type: integer }
+        random_show: { type: boolean }
+        license: { type: string }
+        cover_asset_id: { type: [string, "null"] }
+        image_sorting:
+          type: integer
+          enum: [1, 2, 3, 4]
+          description: 1 upload desc, 2 shoot desc, 3 upload asc, 4 shoot asc
+    AlbumAsset:
+      type: object
+      required: [id, original_name, width, height, visible, featured, sort]
+      properties:
+        id: { type: string }
+        original_name: { type: string }
+        title: { type: string }
+        width: { type: integer }
+        height: { type: integer }
+        visible: { type: boolean }
+        featured: { type: boolean }
+        sort: { type: integer }
+        preview_url: { type: string }
+        thumbnail_url: { type: string }
+    AlbumList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Album"
+    Tag:
+      type: object
+      required: [id, name, created_at, updated_at]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category: { type: string }
+        parent_id: { type: string }
+        detail: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
+    TagList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
+    TagCreateInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        category: { type: string }
+        parent_id: { type: string }
+        detail: { type: string }
+    TagUpdateInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        category: { type: string }
+        detail: { type: string }
+    GuideInput:
+      type: object
+      required: [title, days, published, sort]
+      properties:
+        title: { type: string, minLength: 1 }
+        country: { type: string }
+        city: { type: string }
+        days: { type: integer, minimum: 0 }
+        start_date: { type: [string, "null"], format: date-time }
+        end_date: { type: [string, "null"], format: date-time }
+        cover_asset_id: { type: [string, "null"] }
+        published: { type: boolean }
+        sort: { type: integer }
+    CountPoint:
+      type: object
+      required: [date, count]
+      properties:
+        date: { type: string }
+        count: { type: integer }
+    NamedCount:
+      type: object
+      required: [name, count]
+      properties:
+        name: { type: string }
+        count: { type: integer }
+    Dashboard:
+      type: object
+      required: [ImagesTotal, ImagesPublic, AlbumsTotal, GuidesTotal, GuidesPublic, VisitsTotal, VisitsToday, VisitsYesterday, CamerasTotal, LensesTotal, last_7_days]
+      properties:
+        ImagesTotal: { type: integer }
+        ImagesPublic: { type: integer }
+        AlbumsTotal: { type: integer }
+        GuidesTotal: { type: integer }
+        GuidesPublic: { type: integer }
+        VisitsTotal: { type: integer }
+        VisitsToday: { type: integer }
+        VisitsYesterday: { type: integer }
+        CamerasTotal: { type: integer }
+        LensesTotal: { type: integer }
+        last_7_days:
+          type: array
+          items: { $ref: "#/components/schemas/CountPoint" }
+        TopCameras:
+          type: array
+          items: { $ref: "#/components/schemas/NamedCount" }
+        TopLenses:
+          type: array
+          items: { $ref: "#/components/schemas/NamedCount" }
+        PhotosByYear:
+          type: array
+          items: { $ref: "#/components/schemas/NamedCount" }
+    Analytics:
+      type: object
+      required: [dashboard, unique_visitors, hourly, sources, pages]
+      properties:
+        dashboard: { $ref: "#/components/schemas/Dashboard" }
+        unique_visitors: { type: integer }
+        hourly:
+          type: array
+          items: { $ref: "#/components/schemas/CountPoint" }
+        sources:
+          type: array
+          items: { $ref: "#/components/schemas/NamedCount" }
+        pages:
+          type: array
+          items: { $ref: "#/components/schemas/NamedCount" }
+    PublicSettings:
+      type: object
+      required: [site_title, site_author, site_favicon_url, about_intro, about_gallery_asset_ids, gallery_layout, public_original_download]
+      properties:
+        site_title: { type: string }
+        site_author: { type: string }
+        site_favicon_url: { type: string }
+        about_intro: { type: string }
+        about_social_instagram: { type: string }
+        about_social_xiaohongshu: { type: string }
+        about_social_weibo: { type: string }
+        about_social_github: { type: string }
+        about_gallery_asset_ids:
+          type: array
+          items: { type: string }
+        gallery_layout: { type: string, enum: [grid, single] }
+        public_original_download: { type: boolean }
+    SiteSettings:
+      allOf:
+        - $ref: "#/components/schemas/PublicSettings"
+        - type: object
+          additionalProperties: false
+          required: [admin_images_per_page, max_upload_files, preview_quality, preview_max_width, analytics_enabled, analytics_retention_days, analytics_timezone]
+          properties:
+            admin_images_per_page: { type: integer, minimum: 1, maximum: 200 }
+            max_upload_files: { type: integer, minimum: 1, maximum: 100 }
+            preview_quality: { type: integer, minimum: 1, maximum: 100 }
+            preview_max_width: { type: integer, minimum: 320, maximum: 16384 }
+            analytics_enabled: { type: boolean }
+            analytics_retention_days: { type: integer, minimum: 1, maximum: 3650 }
+            analytics_timezone: { type: string, example: Asia/Shanghai }
+    VisitInput:
+      type: object
+      required: [path, page_type]
+      properties:
+        path: { type: string }
+        page_type: { type: string, enum: [home, gallery, album, guide, about, other] }
+        referrer: { type: string }
+    PasswordRequest:
+      type: object
+      additionalProperties: false
+      required: [password]
+      properties:
+        password:
+          type: string
+          minLength: 12
+          maxLength: 128
+    ChangePasswordRequest:
+      type: object
+      additionalProperties: false
+      required: [current_password, new_password]
+      properties:
+        current_password:
+          type: string
+        new_password:
+          type: string
+          minLength: 12
+          maxLength: 128
+    AuthState:
+      type: object
+      required: [initialized]
+      properties:
+        initialized:
+          type: boolean
+        authenticated:
+          type: boolean
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            request_id:
+              type: string
+  responses:
+    APIError:
+      description: API error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"

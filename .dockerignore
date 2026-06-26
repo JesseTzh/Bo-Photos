@@ -1,0 +1,8 @@
+.git
+frontend/node_modules
+frontend/dist
+backend/.cache
+data
+docs
+*.log
+.env*

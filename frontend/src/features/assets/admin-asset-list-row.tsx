@@ -1,0 +1,61 @@
+import { DeleteOutlined, EditOutlined, EyeOutlined, ReloadOutlined, UndoOutlined } from "@ant-design/icons";
+import { Button, Checkbox, Space, Switch, Tag, Tooltip } from "antd";
+import type { Asset } from "./schema";
+
+interface AdminAssetListRowProps {
+  asset: Asset;
+  selected: boolean;
+  onSelect: (checked: boolean) => void;
+  onView: () => void;
+  onEdit: () => void;
+  onRetry: () => void;
+  onRestore: () => void;
+  onDelete: () => void;
+  onToggleVisible: (value: boolean) => void;
+  onToggleFeatured: (value: boolean) => void;
+}
+
+export function AdminAssetListRow({
+  asset,
+  selected,
+  onSelect,
+  onView,
+  onEdit,
+  onRetry,
+  onRestore,
+  onDelete,
+  onToggleVisible,
+  onToggleFeatured
+}: AdminAssetListRowProps) {
+  const imageUrl = asset.thumbnail_url || asset.preview_url;
+
+  return (
+    <div className="admin-asset-row">
+      <Checkbox checked={selected} onChange={(event) => onSelect(event.target.checked)} />
+      {imageUrl ? (
+        <img className="admin-asset-row-thumb" src={imageUrl} alt={asset.title || asset.original_name} />
+      ) : (
+        <div className="admin-asset-row-thumb admin-asset-row-thumb-empty">
+          {asset.status === "failed" ? "失败" : "-"}
+        </div>
+      )}
+      <div className="admin-asset-row-main">
+        <strong>{asset.title || asset.original_name}</strong>
+        <span>{asset.width} x {asset.height}</span>
+        <span>{[asset.camera, asset.lens].filter(Boolean).join(" / ") || "Unknown"}</span>
+        <span>{asset.shoot_at ? new Date(asset.shoot_at).toLocaleString() : "-"}</span>
+      </div>
+      <div className="admin-asset-row-actions">
+        <Space wrap>
+          <Tag>{asset.status}</Tag>
+          <Switch size="small" checked={asset.visible} onChange={onToggleVisible} />
+          <Switch size="small" checked={asset.featured} onChange={onToggleFeatured} />
+          <Tooltip title="查看"><Button icon={<EyeOutlined />} onClick={onView} /></Tooltip>
+          <Tooltip title="编辑"><Button icon={<EditOutlined />} onClick={onEdit} /></Tooltip>
+          {asset.status === "failed" || asset.status === "ready" ? <Tooltip title="重试"><Button icon={<ReloadOutlined />} onClick={onRetry} /></Tooltip> : null}
+          {asset.status === "deleted" ? <Tooltip title="恢复"><Button icon={<UndoOutlined />} onClick={onRestore} /></Tooltip> : <Tooltip title="删除"><Button danger icon={<DeleteOutlined />} onClick={onDelete} /></Tooltip>}
+        </Space>
+      </div>
+    </div>
+  );
+}

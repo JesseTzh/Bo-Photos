@@ -1,0 +1,10 @@
+DROP INDEX IF EXISTS guide_albums_guide_sort_idx;
+DROP TABLE IF EXISTS guide_albums;
+DROP INDEX IF EXISTS guide_toc_guide_sort_idx;
+DROP TABLE IF EXISTS guide_toc;
+DROP INDEX IF EXISTS guide_content_blocks_module_sort_idx;
+DROP TABLE IF EXISTS guide_content_blocks;
+DROP INDEX IF EXISTS guide_modules_guide_sort_idx;
+DROP TABLE IF EXISTS guide_modules;
+DROP INDEX IF EXISTS guides_public_idx;
+DROP TABLE IF EXISTS guides;
