@@ -12,7 +12,7 @@ import { AdminAlbumSortPage } from "../pages/admin-album-sort-page";
 import { AdminAlbumEditPage } from "../pages/admin-album-edit-page";
 import { AdminAlbumImagesPage } from "../pages/admin-album-images-page";
 import { AdminTagsPage } from "../pages/admin-tags-page";
-import { AlbumsPage } from "../pages/albums-page";
+import { CoversPage } from "../pages/covers-page";
 import { AboutPage } from "../pages/about-page";
 import { AdminSettingsPage } from "../pages/admin-settings-page";
 import { AdminAnalyticsPage } from "../pages/admin-analytics-page";
@@ -34,11 +34,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/albums",
-    element: <AlbumsPage />
+    element: <Navigate to="/gallery" replace />
   },
   {
     path: "/covers",
-    element: <AlbumsPage coversOnly />
+    element: <CoversPage />
   },
   { path: "/about", element: <AboutPage /> },
   {
