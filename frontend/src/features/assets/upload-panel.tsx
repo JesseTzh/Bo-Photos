@@ -8,14 +8,6 @@ import { type AssetUpdate, useDeleteAssets, useSaveAssetAlbums, useUpdateAsset }
 import { readReferenceExif } from "./exif";
 import { defaultUploadMetadata, type UploadMetadataDraft, type UploadQueueItem, useUploadQueue } from "./upload-queue";
 
-const statusColor: Record<string, string> = {
-  queued: "default",
-  uploading: "processing",
-  processing: "processing",
-  ready: "success",
-  failed: "error"
-};
-
 interface UploadPanelProps {
   onAssetReady?: () => void;
 }
@@ -151,7 +143,7 @@ export function UploadPanel({ onAssetReady }: UploadPanelProps) {
                 />
                 <div className="upload-status">
                   {item.status === "uploading" ? <Progress type="circle" percent={50} size={28} /> : null}
-                  <Tag color={statusColor[item.status]}>{item.status}</Tag>
+                  <Tag className={`asset-status-tag asset-status-tag--${item.status}`}>{item.status}</Tag>
                 </div>
               </List.Item>
             )}

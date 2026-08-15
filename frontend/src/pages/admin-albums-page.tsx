@@ -39,7 +39,7 @@ export function AdminAlbumsPage() {
           { title: "名称", dataIndex: "name" },
           { title: "路由", dataIndex: "album_value", render: (value) => `/${value}` },
           { title: "图片", dataIndex: "asset_count", width: 90 },
-          { title: "状态", width: 100, render: (_, item) => item.visible ? <Tag color="green">公开</Tag> : <Tag>隐藏</Tag> },
+          { title: "状态", width: 100, render: (_, item) => item.visible ? <Tag className="visibility-status-tag visibility-status-tag--visible">公开</Tag> : <Tag className="visibility-status-tag visibility-status-tag--hidden">隐藏</Tag> },
           {
             title: "操作",
             width: 280,

@@ -84,7 +84,7 @@ export function AboutPage() {
                           type="button"
                           onClick={() => setIndex(imageIndex)}
                           aria-label={`第 ${imageIndex + 1} 张`}
-                          className={`h-1.5 rounded-full transition-all ${imageIndex === index ? "w-6 bg-white" : "w-1.5 bg-white/50"}`}
+                          className={`h-1.5 rounded-full transition-all ${imageIndex === index ? "w-6 bg-media-control" : "w-1.5 bg-media-control/50"}`}
                         />
                       ))}
                     </div>

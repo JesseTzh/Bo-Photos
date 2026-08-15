@@ -2,6 +2,8 @@
 
 FROM node:22-bookworm-slim AS frontend-builder
 WORKDIR /src/frontend
+ARG BOPHOTOS_GIT_SHA
+ENV BOPHOTOS_GIT_SHA=${BOPHOTOS_GIT_SHA}
 RUN corepack enable && corepack prepare pnpm@11.9.0 --activate
 COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile

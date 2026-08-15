@@ -51,8 +51,8 @@ export function AdminAssetListRow({
       </div>
       <div className="admin-asset-row-actions">
         <Space wrap>
-          <Tag>{asset.status}</Tag>
-          {asset.private ? <Tag color="purple">隐私</Tag> : null}
+          <Tag className={`asset-status-tag asset-status-tag--${asset.status}`}>{asset.status}</Tag>
+          {asset.private ? <Tag className="privacy-status-tag">隐私</Tag> : null}
           <Switch size="small" checked={asset.visible} onChange={onToggleVisible} />
           <Switch size="small" checked={asset.private} onChange={onTogglePrivate} />
           <Switch size="small" checked={asset.featured} onChange={onToggleFeatured} />

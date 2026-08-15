@@ -368,7 +368,7 @@ export function ThemeGallery(props: ThemeGalleryProps) {
           aria-expanded={fabOpen}
           onClick={() => setFabOpen((value) => !value)}
           className={cn(
-            "relative flex h-12 w-12 items-center justify-center rounded-full border border-border/80 bg-background/95 text-foreground shadow-[0_2px_16px_rgba(0,0,0,0.12)] backdrop-blur-xl transition-transform duration-200 active:scale-95",
+            "gallery-floating-control relative flex h-12 w-12 items-center justify-center rounded-full border border-border/80 bg-background/95 text-foreground backdrop-blur-xl transition-transform duration-200 active:scale-95",
             fabOpen && "rotate-45"
           )}
         >
@@ -380,7 +380,7 @@ export function ThemeGallery(props: ThemeGalleryProps) {
       {enableFilters ? (
         <div
           className={cn(
-            "fixed inset-0 z-50 bg-black/30 transition-opacity duration-300",
+            "fixed inset-0 z-50 bg-media-scrim/30 transition-opacity duration-300",
             sheetOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
           )}
           onClick={() => setSheetOpen(false)}

@@ -46,6 +46,7 @@ export function LoginPage() {
           登录
         </Button>
       </Form>
+      <p className="auth-version">ver:{__APP_VERSION__}</p>
     </AuthLayout>
   );
 }

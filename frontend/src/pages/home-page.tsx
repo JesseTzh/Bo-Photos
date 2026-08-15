@@ -60,7 +60,7 @@ export function HomePage() {
                   className="absolute inset-0 bg-cover bg-center"
                   style={{ backgroundImage: `url(${currentImage.preview_url || currentImage.thumbnail_url})` }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-media-scrim/80 via-media-scrim/30 to-media-scrim/20" />
                 <div className="home-hero-vignette absolute inset-0" />
               </motion.div>
             ) : (
@@ -81,7 +81,7 @@ export function HomePage() {
               initial={reduceMotion ? false : { opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: reduceMotion ? 0 : 0.2, duration: reduceMotion ? 0 : 0.8 }}
-              className="text-xs font-light uppercase tracking-[0.25em] text-white/80"
+              className="text-xs font-light uppercase tracking-[0.25em] text-on-media/80"
             >
               Photography
             </motion.span>
@@ -93,16 +93,16 @@ export function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: reduceMotion ? 0 : 0.5, duration: reduceMotion ? 0 : 1, ease: "easeOut" }}
             >
-              <p className="mb-2 text-[10px] uppercase tracking-[0.35em] text-white/50 sm:mb-3 sm:text-xs">
+              <p className="mb-2 text-[10px] uppercase tracking-[0.35em] text-on-media/50 sm:mb-3 sm:text-xs">
                 Visual Storytelling
               </p>
-              <h1 className="mb-3 text-4xl font-light leading-[1.1] text-white sm:mb-4 sm:text-5xl md:text-6xl lg:text-7xl">
+              <h1 className="mb-3 text-4xl font-light leading-[1.1] text-on-media sm:mb-4 sm:text-5xl md:text-6xl lg:text-7xl">
                 <span className="block">Every Moment</span>
                 <span className="home-hero-accent-text block bg-clip-text text-transparent">
                   Tells a Story
                 </span>
               </h1>
-              <p className="mx-auto max-w-[260px] text-xs font-light leading-relaxed text-white/60 sm:max-w-sm sm:text-sm">
+              <p className="mx-auto max-w-[260px] text-xs font-light leading-relaxed text-on-media/60 sm:max-w-sm sm:text-sm">
                 捕捉光影，定格永恒 - 用镜头记录生活的美好瞬间
               </p>
             </motion.div>
@@ -117,12 +117,12 @@ export function HomePage() {
             >
               {heroImages.length > 0 ? (
                 <>
-                  <span className="select-none font-mono text-[10px] text-white/50 tabular-nums sm:text-xs">
+                  <span className="select-none font-mono text-[10px] text-on-media/50 tabular-nums sm:text-xs">
                     {String(currentIndex + 1).padStart(2, "0")}
-                    <span className="mx-1 text-white/25">/</span>
+                    <span className="mx-1 text-on-media/25">/</span>
                     {String(heroImages.length).padStart(2, "0")}
                   </span>
-                  <div className="relative hidden h-px max-w-[72px] flex-1 overflow-hidden rounded-full bg-white/15 sm:block">
+                  <div className="relative hidden h-px max-w-[72px] flex-1 overflow-hidden rounded-full bg-media-control/15 sm:block">
                     <motion.div
                       className="home-hero-progress absolute inset-y-0 left-0"
                       animate={{ width: `${((currentIndex + 1) / heroImages.length) * 100}%` }}
@@ -142,10 +142,10 @@ export function HomePage() {
                 transition={{ delay: reduceMotion ? 0 : 0.9, duration: reduceMotion ? 0 : 0.8 }}
                 whileHover={reduceMotion ? {} : { scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}
-                className="btn-press group flex items-center gap-1.5 whitespace-nowrap rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-xs font-medium tracking-wide !text-white backdrop-blur-md transition-all duration-300 hover:bg-white/20 sm:gap-2 sm:px-7 sm:py-3 sm:text-sm"
+                className="btn-press group flex items-center gap-1.5 whitespace-nowrap rounded-full border border-media-control/20 bg-media-control/10 px-5 py-2.5 text-xs font-medium tracking-wide !text-on-media backdrop-blur-md transition-all duration-300 hover:bg-media-control/20 sm:gap-2 sm:px-7 sm:py-3 sm:text-sm"
               >
                 探索作品集
-                <ArrowRight className="h-3.5 w-3.5 text-white transition-transform duration-200 group-hover:translate-x-0.5 sm:h-4 sm:w-4" />
+                <ArrowRight className="h-3.5 w-3.5 text-on-media transition-transform duration-200 group-hover:translate-x-0.5 sm:h-4 sm:w-4" />
               </motion.button>
             </div>
 
@@ -161,7 +161,7 @@ export function HomePage() {
                     type="button"
                     onClick={previousHero}
                     aria-label="Previous"
-                    className="btn-press flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/60 transition-all duration-200 hover:border-white/40 hover:bg-white/15 hover:text-white sm:h-9 sm:w-9"
+                    className="btn-press flex h-8 w-8 items-center justify-center rounded-full border border-media-control/15 bg-media-control/5 text-on-media/60 transition-all duration-200 hover:border-media-control/40 hover:bg-media-control/15 hover:text-on-media sm:h-9 sm:w-9"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" />
                   </button>
@@ -169,7 +169,7 @@ export function HomePage() {
                     type="button"
                     onClick={nextHero}
                     aria-label="Next"
-                    className="btn-press flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/60 transition-all duration-200 hover:border-white/40 hover:bg-white/15 hover:text-white sm:h-9 sm:w-9"
+                    className="btn-press flex h-8 w-8 items-center justify-center rounded-full border border-media-control/15 bg-media-control/5 text-on-media/60 transition-all duration-200 hover:border-media-control/40 hover:bg-media-control/15 hover:text-on-media sm:h-9 sm:w-9"
                   >
                     <ArrowRight className="h-3.5 w-3.5" />
                   </button>
@@ -220,11 +220,11 @@ export function HomePage() {
                     ) : (
                       <div className="album-cover-fallback h-full w-full" />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-80" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-media-scrim/60 via-media-scrim/10 to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-80" />
                     <div className="absolute inset-x-0 bottom-0 translate-y-4 p-6 transition-transform duration-500 group-hover:translate-y-0">
-                      <p className="mb-2 text-xs uppercase tracking-widest text-white/80">相册</p>
-                      <h3 className="mb-1 text-xl font-medium text-white">{album.name}</h3>
-                      <p className="flex items-center gap-2 text-sm text-white/70">
+                      <p className="mb-2 text-xs uppercase tracking-widest text-on-media/80">相册</p>
+                      <h3 className="mb-1 text-xl font-medium text-on-media">{album.name}</h3>
+                      <p className="flex items-center gap-2 text-sm text-on-media/70">
                         <span className="inline-block h-2 w-2 rounded-full bg-primary" />
                         {album.random_show ? "随机展示" : "顺序排列"}
                       </p>

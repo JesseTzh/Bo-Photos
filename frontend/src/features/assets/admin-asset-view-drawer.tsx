@@ -30,7 +30,7 @@ export function AdminAssetViewDrawer({ asset, open, onClose }: AdminAssetViewDra
           {asset.preview_url ? <Image src={asset.preview_url} alt={asset.title || asset.original_name} /> : null}
           <Descriptions column={1} bordered size="small">
             <Descriptions.Item label="文件名">{asset.original_name}</Descriptions.Item>
-            <Descriptions.Item label="状态"><Tag>{asset.status}</Tag></Descriptions.Item>
+            <Descriptions.Item label="状态"><Tag className={`asset-status-tag asset-status-tag--${asset.status}`}>{asset.status}</Tag></Descriptions.Item>
             <Descriptions.Item label="尺寸">{asset.width} x {asset.height}</Descriptions.Item>
             <Descriptions.Item label="大小">{asset.byte_size ? `${(asset.byte_size / 1048576).toFixed(2)} MB` : "-"}</Descriptions.Item>
             <Descriptions.Item label="相机">{asset.camera || "-"}</Descriptions.Item>

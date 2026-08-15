@@ -70,7 +70,7 @@ export function AdminAssetCard({
         title={<Space><Checkbox checked={selected} onChange={(event) => onSelect(event.target.checked)} />{asset.title || asset.original_name}</Space>}
         description={(
           <Space orientation="vertical" size={8}>
-            <Space wrap><Tag>{asset.status}</Tag>{asset.private ? <Tag color="purple">隐私</Tag> : null}{asset.camera ? <span>{asset.camera}</span> : null}</Space>
+            <Space wrap><Tag className={`asset-status-tag asset-status-tag--${asset.status}`}>{asset.status}</Tag>{asset.private ? <Tag className="privacy-status-tag">隐私</Tag> : null}{asset.camera ? <span>{asset.camera}</span> : null}</Space>
             <Space wrap>
               <Switch size="small" checked={asset.visible} onChange={onToggleVisible} />
               <span>公开</span>

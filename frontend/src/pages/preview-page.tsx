@@ -106,7 +106,7 @@ export function PreviewPage() {
             <button
               onClick={() => navigate(`/preview/${previous.id}${contextSuffix}`, { replace: true })}
               aria-label="上一张"
-              className="absolute left-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+              className="absolute left-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl bg-media-scrim/40 text-on-media backdrop-blur-sm transition-colors hover:bg-media-scrim/60"
               type="button"
             >
               <ChevronLeft size={20} />
@@ -116,7 +116,7 @@ export function PreviewPage() {
             <button
               onClick={() => navigate(`/preview/${next.id}${contextSuffix}`, { replace: true })}
               aria-label="下一张"
-              className="absolute right-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+              className="absolute right-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl bg-media-scrim/40 text-on-media backdrop-blur-sm transition-colors hover:bg-media-scrim/60"
               type="button"
             >
               <ChevronRight size={20} />
@@ -159,12 +159,12 @@ export function PreviewPage() {
         <div className="relative w-full bg-muted/20">
           <img src={imageUrl} alt={item.title || item.original_name} className="h-auto w-full" />
           {previous ? (
-            <button onClick={() => navigate(`/preview/${previous.id}${contextSuffix}`, { replace: true })} aria-label="上一张" className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60" type="button">
+            <button onClick={() => navigate(`/preview/${previous.id}${contextSuffix}`, { replace: true })} aria-label="上一张" className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-media-scrim/40 text-on-media backdrop-blur-sm transition-colors hover:bg-media-scrim/60" type="button">
               <ChevronLeft size={18} />
             </button>
           ) : null}
           {next ? (
-            <button onClick={() => navigate(`/preview/${next.id}${contextSuffix}`, { replace: true })} aria-label="下一张" className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60" type="button">
+            <button onClick={() => navigate(`/preview/${next.id}${contextSuffix}`, { replace: true })} aria-label="下一张" className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-media-scrim/40 text-on-media backdrop-blur-sm transition-colors hover:bg-media-scrim/60" type="button">
               <ChevronRight size={18} />
             </button>
           ) : null}
@@ -184,7 +184,7 @@ export function PreviewPage() {
       </div>
 
       {lightbox ? (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/95 p-4" onClick={() => setLightbox(false)}>
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-lightbox-surface/95 p-4" onClick={() => setLightbox(false)}>
           <img src={imageUrl} alt={item.title || item.original_name} className="max-h-full max-w-full object-contain" />
         </div>
       ) : null}

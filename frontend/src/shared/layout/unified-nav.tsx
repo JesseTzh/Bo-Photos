@@ -71,7 +71,7 @@ export function UnifiedNav({ hideThemeToggle = false }: { hideThemeToggle?: bool
         className={cn(
           "fixed left-0 top-0 z-50 h-14 w-full transition-all duration-500 ease-out",
           isScrolled || pathname !== "/"
-            ? "border-b border-border/30 bg-background/80 shadow-[0_1px_0_0_rgba(0,0,0,0.03)] backdrop-blur-2xl dark:shadow-[0_1px_0_0_rgba(255,255,255,0.03)]"
+            ? "public-nav-scrolled border-b border-border/30 bg-background/80 backdrop-blur-2xl"
             : "border-b border-transparent bg-transparent"
         )}
       >

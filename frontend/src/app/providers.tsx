@@ -58,7 +58,19 @@ function AntdThemeProvider({ children }: PropsWithChildren) {
             borderRadiusLG: 16
           },
           Menu: {
-            itemBorderRadius: 10
+            itemBorderRadius: 8,
+            itemBg: cssVar("--sidebar"),
+            itemColor: cssVar("--admin-menu-text"),
+            itemHoverBg: cssVar("--admin-menu-hover-bg"),
+            itemHoverColor: cssVar("--admin-menu-hover-text"),
+            itemSelectedBg: cssVar("--admin-menu-selected-bg"),
+            itemSelectedColor: cssVar("--admin-menu-selected-text"),
+            darkItemBg: cssVar("--sidebar"),
+            darkItemColor: cssVar("--admin-menu-text"),
+            darkItemHoverBg: cssVar("--admin-menu-hover-bg"),
+            darkItemHoverColor: cssVar("--admin-menu-hover-text"),
+            darkItemSelectedBg: cssVar("--admin-menu-selected-bg"),
+            darkItemSelectedColor: cssVar("--admin-menu-selected-text")
           },
           Table: {
             headerBg: cssVar("--muted"),

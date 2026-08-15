@@ -1,35 +1,18 @@
 import { Empty } from "antd";
 import { ArrowLeft } from "lucide-react";
-import type { CSSProperties } from "react";
 import type { Album } from "../features/albums/api";
 import { useAlbums } from "../features/albums/api";
 import { albumPublicHref } from "../features/albums/routes";
 import { useVisit } from "../features/site/api";
 import { PublicNav } from "../features/site/public-nav";
 import { AppLink } from "../shared/adapters/link";
-import { cn } from "../shared/lib/utils";
-
-function getThemeColor(str: string) {
-  let hash = 0;
-  for (let index = 0; index < str.length; index += 1) {
-    hash = str.charCodeAt(index) + ((hash << 5) - hash);
-  }
-  const hue = Math.abs(hash % 360);
-  return `${hue} 50% 35%`;
-}
 
 function DestinationCard({ album }: { album: Album }) {
-  const themeColor = getThemeColor(album.name);
-
   return (
-    <div className="group h-full w-full" style={{ "--theme-color": themeColor } as CSSProperties}>
+    <div className="group h-full w-full">
       <AppLink
         href={albumPublicHref(album.album_value, "?style=1")}
-        className={cn(
-          "relative block h-full w-full overflow-hidden shadow-lg transition-all duration-500 ease-in-out",
-          "group-hover:scale-105 group-hover:shadow-[0_0_60px_-15px_hsl(var(--theme-color)/0.6)]"
-        )}
-        style={{ boxShadow: "0 0 40px -15px hsl(var(--theme-color) / 0.5)" }}
+        className="album-destination-card relative block h-full w-full overflow-hidden transition-all duration-500 ease-in-out group-hover:scale-105"
         aria-label={`Explore details for ${album.name}`}
       >
         {album.cover_url ? (
@@ -43,9 +26,9 @@ function DestinationCard({ album }: { album: Album }) {
         ) : (
           <div className="absolute inset-0 bg-muted" />
         )}
-        <div className="relative flex h-full flex-col items-center justify-center p-6 text-center text-white">
-          <h2 className="text-4xl font-bold uppercase tracking-[0.2em] drop-shadow-lg">{album.name}</h2>
-          <p className="mt-3 translate-y-4 text-sm font-medium uppercase tracking-widest text-white/90 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
+        <div className="relative flex h-full flex-col items-center justify-center p-6 text-center text-on-media">
+          <h2 className="media-title-shadow text-4xl font-bold uppercase tracking-[0.2em]">{album.name}</h2>
+          <p className="mt-3 translate-y-4 text-sm font-medium uppercase tracking-widest text-on-media/90 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
             {album.asset_count} PHOTOS
           </p>
         </div>
@@ -122,8 +105,8 @@ export function AlbumsPage({ coversOnly = false }: { coversOnly?: boolean }) {
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted/60" />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-black/0" />
-                    <div className="absolute left-3 top-3 rounded-full border border-white/10 bg-black/50 px-2.5 py-1 text-[11px] font-medium text-white/90 backdrop-blur-md">
+                    <div className="absolute inset-0 bg-gradient-to-t from-media-scrim/50 via-media-scrim/0 to-media-scrim/0" />
+                    <div className="absolute left-3 top-3 rounded-full border border-media-control/10 bg-media-scrim/50 px-2.5 py-1 text-[11px] font-medium text-on-media/90 backdrop-blur-md">
                       {album.asset_count} 张
                     </div>
                   </div>
