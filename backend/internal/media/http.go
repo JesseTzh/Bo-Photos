@@ -73,6 +73,13 @@ func (h *Handler) serve(w http.ResponseWriter, r *http.Request) {
 		}
 		key = item.OriginalKey
 		w.Header().Set("Content-Disposition", contentDisposition(item.OriginalName))
+	case "content":
+		if !strings.HasPrefix(item.MIMEType, "video/") {
+			http.NotFound(w, r)
+			return
+		}
+		key = item.OriginalKey
+		w.Header().Set("Cache-Control", "public, max-age=86400")
 	default:
 		http.NotFound(w, r)
 		return
@@ -99,8 +106,10 @@ func (h *Handler) serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	contentType := mime.TypeByExtension(filepath.Ext(path))
-	if variant != "original" {
+	if variant == "thumbnail" || variant == "preview" {
 		contentType = "image/webp"
+	} else if item.MIMEType != "" {
+		contentType = item.MIMEType
 	}
 	if contentType != "" {
 		w.Header().Set("Content-Type", contentType)

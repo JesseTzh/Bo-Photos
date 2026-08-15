@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { albumPublicHref } from "../features/albums/routes";
 import { useAsset, useGallery } from "../features/assets/api";
+import { AssetMedia } from "../features/assets/asset-media";
+import { isVideoAsset } from "../features/assets/schema";
 import { fetchAdminAsset, usePrivateAssets } from "../features/assets/admin-api";
 import { useVisit } from "../features/site/api";
 import { usePublicSettings } from "../features/site/api";
@@ -72,6 +74,8 @@ export function PreviewPage() {
   }
   const item = currentAsset.data;
   const imageUrl = item.preview_url || item.thumbnail_url || item.original_url || "";
+  const video = isVideoAsset(item);
+  const directUrl = item.video_url || imageUrl;
   const downloadEnabled = settings.data?.public_original_download !== false;
   const exifRows = [
     ["相机", item.camera],
@@ -100,7 +104,7 @@ export function PreviewPage() {
       <div className="hidden h-screen w-full flex-row overflow-hidden bg-background lg:flex">
         <div className="relative flex min-w-0 flex-1 items-center justify-center">
           <div className="flex h-full w-full items-center justify-center">
-            <img src={imageUrl} alt={item.title || item.original_name} className="max-h-full max-w-full object-contain" />
+            <AssetMedia asset={item} controls={video} autoPlay={video} className="max-h-full max-w-full object-contain" />
           </div>
           {previous ? (
             <button
@@ -139,11 +143,11 @@ export function PreviewPage() {
           <PreviewInfo
             description={item.description}
             exifRows={exifRows}
-            imageUrl={item.original_url || imageUrl}
+            imageUrl={video ? directUrl : item.original_url || directUrl}
             shareUrl={window.location.href}
             downloadUrl={downloadEnabled ? item.original_url : undefined}
             onCopy={copyText}
-            onFullscreen={() => setLightbox(true)}
+            onFullscreen={video ? undefined : () => setLightbox(true)}
           />
         </aside>
       </div>
@@ -157,7 +161,7 @@ export function PreviewPage() {
         </div>
 
         <div className="relative w-full bg-muted/20">
-          <img src={imageUrl} alt={item.title || item.original_name} className="h-auto w-full" />
+          <AssetMedia asset={item} controls={video} autoPlay={video} className="h-auto w-full" />
           {previous ? (
             <button onClick={() => navigate(`/preview/${previous.id}${contextSuffix}`, { replace: true })} aria-label="上一张" className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-media-scrim/40 text-on-media backdrop-blur-sm transition-colors hover:bg-media-scrim/60" type="button">
               <ChevronLeft size={18} />
@@ -174,16 +178,16 @@ export function PreviewPage() {
           <PreviewInfo
             description={item.description}
             exifRows={exifRows}
-            imageUrl={item.original_url || imageUrl}
+            imageUrl={video ? directUrl : item.original_url || directUrl}
             shareUrl={window.location.href}
             downloadUrl={downloadEnabled ? item.original_url : undefined}
             onCopy={copyText}
-            onFullscreen={() => setLightbox(true)}
+            onFullscreen={video ? undefined : () => setLightbox(true)}
           />
         </div>
       </div>
 
-      {lightbox ? (
+      {lightbox && !video ? (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-lightbox-surface/95 p-4" onClick={() => setLightbox(false)}>
           <img src={imageUrl} alt={item.title || item.original_name} className="max-h-full max-w-full object-contain" />
         </div>
@@ -207,7 +211,7 @@ function PreviewInfo({
   shareUrl: string;
   downloadUrl?: string;
   onCopy: (value?: string, success?: string) => void;
-  onFullscreen: () => void;
+  onFullscreen?: () => void;
 }) {
   return (
     <div className="space-y-5 px-6 py-5">
@@ -234,7 +238,7 @@ function PreviewInfo({
             <ActionButton icon={<Copy size={14} />} label="复制直链" onClick={() => onCopy(imageUrl, "图片链接已复制")} />
             <ActionButton icon={<LinkIcon size={14} />} label="分享链接" onClick={() => onCopy(shareUrl, "分享链接已复制")} />
             {downloadUrl ? <ActionButton icon={<Download size={14} />} label="下载" onClick={() => window.open(downloadUrl, "_blank")} /> : null}
-            <ActionButton icon={<Expand size={14} />} label="全屏" onClick={onFullscreen} />
+            {onFullscreen ? <ActionButton icon={<Expand size={14} />} label="全屏" onClick={onFullscreen} /> : null}
           </div>
         </div>
       </section>

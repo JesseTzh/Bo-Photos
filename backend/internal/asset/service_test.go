@@ -38,6 +38,32 @@ func TestServiceUploadCreatesProcessingAssetAndDuplicateWarning(t *testing.T) {
 	}
 }
 
+func TestServiceUploadVideoCreatesReadyAssetWithoutQueue(t *testing.T) {
+	service, repo, _, queue := newTestAssetService(t, imageproc.Metadata{}, nil)
+	content := append([]byte{0, 0, 0, 24, 'f', 't', 'y', 'p', 'i', 's', 'o', 'm'}, []byte("video")...)
+
+	upload, err := service.Upload(context.Background(), "intro.mp4", bytes.NewReader(content))
+	if err != nil {
+		t.Fatalf("Upload() error = %v", err)
+	}
+	if upload.Asset.Status != StatusReady || upload.Asset.MIMEType != "video/mp4" {
+		t.Fatalf("video asset = %#v", upload.Asset)
+	}
+	if len(queue.ids) != 0 {
+		t.Fatalf("video queued for image processing: %#v", queue.ids)
+	}
+	stored, err := repo.Get(context.Background(), upload.Asset.ID)
+	if err != nil {
+		t.Fatalf("Get() error = %v", err)
+	}
+	if stored.Status != StatusReady || stored.PreviewKey != "" || stored.ThumbnailKey != "" {
+		t.Fatalf("stored video = %#v", stored)
+	}
+	if err := service.Retry(context.Background(), stored.ID); !errors.Is(err, ErrInvalidTransition) {
+		t.Fatalf("Retry(video) error = %v, want ErrInvalidTransition", err)
+	}
+}
+
 func TestServiceProcessTransitionsToReady(t *testing.T) {
 	metadata := imageproc.Metadata{Width: 4000, Height: 3000, Camera: "Fujifilm X-T5"}
 	service, repo, local, _ := newTestAssetService(t, metadata, nil)

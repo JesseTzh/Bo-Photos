@@ -1,5 +1,6 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { Asset } from "../assets/schema";
+import { AssetMedia } from "../assets/asset-media";
 import { AppLink } from "../../shared/adapters/link";
 import { cn } from "../../shared/lib/utils";
 
@@ -104,7 +105,7 @@ export function VirtualWaterfallGallery({ assets, previewSearch = "", overscanPx
 
 const WaterfallCard = memo(function WaterfallCard({ item, previewSearch }: { item: LayoutItem; previewSearch: string }) {
   const [loaded, setLoaded] = useState(false);
-  const imageUrl = item.asset.preview_url || item.asset.thumbnail_url || "";
+  const hasMedia = Boolean(item.asset.preview_url || item.asset.thumbnail_url || item.asset.video_url);
   const href = `/preview/${item.asset.id}${previewSearch}`;
 
   return (
@@ -114,14 +115,10 @@ const WaterfallCard = memo(function WaterfallCard({ item, previewSearch }: { ite
       style={{ left: item.x, top: item.y, width: item.w, height: item.h }}
     >
       {!loaded ? <div className="absolute inset-0 animate-pulse bg-muted" /> : null}
-      {imageUrl ? (
-        <img
-          src={imageUrl}
-          alt={item.asset.title || item.asset.original_name}
-          width={item.w}
-          height={item.h}
+      {hasMedia ? (
+        <AssetMedia
+          asset={item.asset}
           loading={item.index < 8 ? "eager" : "lazy"}
-          decoding="async"
           onLoad={() => setLoaded(true)}
           className={cn("h-full w-full object-cover transition-opacity duration-200", loaded ? "opacity-100" : "opacity-0")}
         />

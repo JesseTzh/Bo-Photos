@@ -1,6 +1,7 @@
 import { DeleteOutlined, EditOutlined, EyeOutlined, ReloadOutlined, UndoOutlined } from "@ant-design/icons";
-import { Button, Card, Checkbox, Image, Popconfirm, Space, Switch, Tag, Tooltip } from "antd";
-import type { Asset } from "./schema";
+import { Button, Card, Checkbox, Popconfirm, Space, Switch, Tag, Tooltip } from "antd";
+import { AssetMedia } from "./asset-media";
+import { isVideoAsset, type Asset } from "./schema";
 
 interface AdminAssetCardProps {
   asset: Asset;
@@ -31,13 +32,13 @@ export function AdminAssetCard({
   onTogglePrivate,
   onToggleFeatured
 }: AdminAssetCardProps) {
-  const imageUrl = asset.thumbnail_url || asset.preview_url;
+  const hasPreview = Boolean(asset.thumbnail_url || asset.preview_url || asset.video_url);
 
   return (
     <Card
       className="admin-asset-card"
-      cover={imageUrl ? (
-        <Image src={imageUrl} alt={asset.title || asset.original_name} />
+      cover={hasPreview ? (
+        <AssetMedia asset={asset} className="admin-asset-card-media" muted />
       ) : (
         <div className="admin-asset-card-empty">
           <span>{asset.status === "failed" ? "处理失败" : "暂无预览"}</span>
@@ -46,7 +47,7 @@ export function AdminAssetCard({
       actions={[
         <Tooltip title="查看" key="view"><Button type="text" icon={<EyeOutlined />} onClick={onView} /></Tooltip>,
         <Tooltip title="编辑" key="edit"><Button type="text" icon={<EditOutlined />} onClick={onEdit} /></Tooltip>,
-        asset.status === "failed" || asset.status === "ready"
+        (asset.status === "failed" || asset.status === "ready") && !isVideoAsset(asset)
           ? <Tooltip title="重试" key="retry"><Button type="text" icon={<ReloadOutlined />} onClick={onRetry} /></Tooltip>
           : <span key="retry" />,
         asset.status === "deleted"

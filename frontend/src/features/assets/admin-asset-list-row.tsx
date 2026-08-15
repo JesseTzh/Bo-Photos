@@ -1,6 +1,7 @@
 import { DeleteOutlined, EditOutlined, EyeOutlined, ReloadOutlined, UndoOutlined } from "@ant-design/icons";
 import { Button, Checkbox, Popconfirm, Space, Switch, Tag, Tooltip } from "antd";
-import type { Asset } from "./schema";
+import { isVideoAsset, type Asset } from "./schema";
+import { AssetMedia } from "./asset-media";
 
 interface AdminAssetListRowProps {
   asset: Asset;
@@ -31,13 +32,13 @@ export function AdminAssetListRow({
   onTogglePrivate,
   onToggleFeatured
 }: AdminAssetListRowProps) {
-  const imageUrl = asset.thumbnail_url || asset.preview_url;
+  const hasPreview = Boolean(asset.thumbnail_url || asset.preview_url || asset.video_url);
 
   return (
     <div className="admin-asset-row">
       <Checkbox checked={selected} onChange={(event) => onSelect(event.target.checked)} />
-      {imageUrl ? (
-        <img className="admin-asset-row-thumb" src={imageUrl} alt={asset.title || asset.original_name} />
+      {hasPreview ? (
+        <AssetMedia asset={asset} className="admin-asset-row-thumb" muted />
       ) : (
         <div className="admin-asset-row-thumb admin-asset-row-thumb-empty">
           {asset.status === "failed" ? "失败" : "-"}
@@ -58,7 +59,7 @@ export function AdminAssetListRow({
           <Switch size="small" checked={asset.featured} onChange={onToggleFeatured} />
           <Tooltip title="查看"><Button icon={<EyeOutlined />} onClick={onView} /></Tooltip>
           <Tooltip title="编辑"><Button icon={<EditOutlined />} onClick={onEdit} /></Tooltip>
-          {asset.status === "failed" || asset.status === "ready" ? <Tooltip title="重试"><Button icon={<ReloadOutlined />} onClick={onRetry} /></Tooltip> : null}
+          {(asset.status === "failed" || asset.status === "ready") && !isVideoAsset(asset) ? <Tooltip title="重试"><Button icon={<ReloadOutlined />} onClick={onRetry} /></Tooltip> : null}
           {asset.status === "deleted" ? (
             <>
               <Tooltip title="恢复"><Button icon={<UndoOutlined />} onClick={onRestore} /></Tooltip>

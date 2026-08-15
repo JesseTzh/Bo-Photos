@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { AlbumForm } from "../features/albums/album-form";
 import { type AlbumInput, useAdminAlbum, useDeleteAlbum, useSaveAlbum } from "../features/albums/api";
 import { useAllAdminAssets } from "../features/assets/admin-api";
+import { isVideoAsset } from "../features/assets/schema";
 
 export function AdminAlbumEditPage() {
   const { id } = useParams();
@@ -17,7 +18,7 @@ export function AdminAlbumEditPage() {
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
   const assetOptions = useMemo(
-    () => (assets.data ?? []).map((item) => ({ value: item.id, label: item.title || item.original_name })),
+    () => (assets.data ?? []).filter((item) => !isVideoAsset(item)).map((item) => ({ value: item.id, label: item.title || item.original_name })),
     [assets.data]
   );
 

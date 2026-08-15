@@ -620,6 +620,14 @@ select {
   object-fit: cover;
 }
 
+.admin-asset-card-media {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+  background: #111;
+}
+
 .admin-dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

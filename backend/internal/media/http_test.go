@@ -118,6 +118,32 @@ func TestPrivateMediaRequiresAdministrator(t *testing.T) {
 	}
 }
 
+func TestVideoContentIsPublicInlineAndSupportsRange(t *testing.T) {
+	repo, local := newMediaTestDependencies(t)
+	item := asset.Asset{
+		ID: "intro-video", Status: asset.StatusReady, OriginalName: "intro.mp4",
+		OriginalKey: "originals/intro-video.mp4", SHA256: "intro-video",
+		MIMEType: "video/mp4", Visible: true, CreatedAt: testTime(), UpdatedAt: testTime(),
+	}
+	if err := repo.Create(context.Background(), item); err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+	writeMedia(t, local, item.OriginalKey, []byte("0123456789"))
+
+	handler := NewHandler(repo, local, func(context.Context) bool { return false }, false)
+	request := httptest.NewRequest(http.MethodGet, "/assets/intro-video/content", nil)
+	request.Header.Set("Range", "bytes=3-6")
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+
+	if response.Code != http.StatusPartialContent || response.Body.String() != "3456" {
+		t.Fatalf("video range status=%d body=%q", response.Code, response.Body.String())
+	}
+	if contentType := response.Header().Get("Content-Type"); contentType != "video/mp4" {
+		t.Fatalf("Content-Type = %q, want video/mp4", contentType)
+	}
+}
+
 func newMediaTestDependencies(t *testing.T) (*asset.Repository, *storage.Local) {
 	t.Helper()
 	db, err := repository.Open(context.Background(), filepath.Join(t.TempDir(), "app.db"))

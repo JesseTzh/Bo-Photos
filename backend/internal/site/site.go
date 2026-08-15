@@ -26,6 +26,8 @@ type Settings struct {
 	SiteTitle              string   `json:"site_title"`
 	SiteAuthor             string   `json:"site_author"`
 	SiteFaviconURL         string   `json:"site_favicon_url"`
+	HeroAssetID            string   `json:"hero_asset_id"`
+	HeroShowText           bool     `json:"hero_show_text"`
 	AboutIntro             string   `json:"about_intro"`
 	AboutInstagram         string   `json:"about_social_instagram"`
 	AboutXiaohongshu       string   `json:"about_social_xiaohongshu"`
@@ -44,7 +46,7 @@ type Settings struct {
 }
 
 func Defaults() Settings {
-	return Settings{SiteTitle: "BoPhoto", GalleryLayout: "grid", PublicOriginalDownload: true, AdminImagesPerPage: 20, MaxUploadFiles: 5, PreviewQuality: 80, PreviewMaxWidth: 2560, AnalyticsEnabled: true, AnalyticsRetentionDays: 90, AnalyticsTimezone: "Asia/Shanghai"}
+	return Settings{SiteTitle: "BoPhoto", HeroShowText: true, GalleryLayout: "grid", PublicOriginalDownload: true, AdminImagesPerPage: 20, MaxUploadFiles: 5, PreviewQuality: 80, PreviewMaxWidth: 2560, AnalyticsEnabled: true, AnalyticsRetentionDays: 90, AnalyticsTimezone: "Asia/Shanghai"}
 }
 
 type Repository struct {
@@ -76,6 +78,8 @@ func (r *Repository) Get(ctx context.Context) (Settings, error) {
 	s.SiteTitle = value(m, "site_title", s.SiteTitle)
 	s.SiteAuthor = m["site_author"]
 	s.SiteFaviconURL = m["site_favicon_url"]
+	s.HeroAssetID = m["hero_asset_id"]
+	s.HeroShowText = boolValue(m, "hero_show_text", s.HeroShowText)
 	s.AboutIntro = m["about_intro"]
 	s.AboutInstagram = m["about_social_instagram"]
 	s.AboutXiaohongshu = m["about_social_xiaohongshu"]
@@ -104,7 +108,7 @@ func (r *Repository) Put(ctx context.Context, s Settings) error {
 		return errors.New("invalid analytics timezone")
 	}
 	gallery, _ := json.Marshal(s.AboutGalleryAssetIDs)
-	values := map[string]string{"site_title": s.SiteTitle, "site_author": s.SiteAuthor, "site_favicon_url": s.SiteFaviconURL, "about_intro": s.AboutIntro, "about_social_instagram": s.AboutInstagram, "about_social_xiaohongshu": s.AboutXiaohongshu, "about_social_weibo": s.AboutWeibo, "about_social_github": s.AboutGithub, "about_gallery_asset_ids": string(gallery), "gallery_layout": s.GalleryLayout, "public_original_download": strconv.FormatBool(s.PublicOriginalDownload), "admin_images_per_page": strconv.Itoa(s.AdminImagesPerPage), "max_upload_files": strconv.Itoa(s.MaxUploadFiles), "preview_quality": strconv.Itoa(s.PreviewQuality), "preview_max_width": strconv.Itoa(s.PreviewMaxWidth), "analytics_enabled": strconv.FormatBool(s.AnalyticsEnabled), "analytics_retention_days": strconv.Itoa(s.AnalyticsRetentionDays), "analytics_timezone": s.AnalyticsTimezone}
+	values := map[string]string{"site_title": s.SiteTitle, "site_author": s.SiteAuthor, "site_favicon_url": s.SiteFaviconURL, "hero_asset_id": s.HeroAssetID, "hero_show_text": strconv.FormatBool(s.HeroShowText), "about_intro": s.AboutIntro, "about_social_instagram": s.AboutInstagram, "about_social_xiaohongshu": s.AboutXiaohongshu, "about_social_weibo": s.AboutWeibo, "about_social_github": s.AboutGithub, "about_gallery_asset_ids": string(gallery), "gallery_layout": s.GalleryLayout, "public_original_download": strconv.FormatBool(s.PublicOriginalDownload), "admin_images_per_page": strconv.Itoa(s.AdminImagesPerPage), "max_upload_files": strconv.Itoa(s.MaxUploadFiles), "preview_quality": strconv.Itoa(s.PreviewQuality), "preview_max_width": strconv.Itoa(s.PreviewMaxWidth), "analytics_enabled": strconv.FormatBool(s.AnalyticsEnabled), "analytics_retention_days": strconv.Itoa(s.AnalyticsRetentionDays), "analytics_timezone": s.AnalyticsTimezone}
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -302,7 +306,7 @@ func (h *Handler) publicSettings(w http.ResponseWriter, r *http.Request) {
 		write(w, 500, err)
 		return
 	}
-	writeJSON(w, 200, map[string]any{"site_title": s.SiteTitle, "site_author": s.SiteAuthor, "site_favicon_url": s.SiteFaviconURL, "about_intro": s.AboutIntro, "about_social_instagram": s.AboutInstagram, "about_social_xiaohongshu": s.AboutXiaohongshu, "about_social_weibo": s.AboutWeibo, "about_social_github": s.AboutGithub, "about_gallery_asset_ids": s.AboutGalleryAssetIDs, "gallery_layout": s.GalleryLayout, "public_original_download": s.PublicOriginalDownload})
+	writeJSON(w, 200, map[string]any{"site_title": s.SiteTitle, "site_author": s.SiteAuthor, "site_favicon_url": s.SiteFaviconURL, "hero_asset_id": s.HeroAssetID, "hero_show_text": s.HeroShowText, "about_intro": s.AboutIntro, "about_social_instagram": s.AboutInstagram, "about_social_xiaohongshu": s.AboutXiaohongshu, "about_social_weibo": s.AboutWeibo, "about_social_github": s.AboutGithub, "about_gallery_asset_ids": s.AboutGalleryAssetIDs, "gallery_layout": s.GalleryLayout, "public_original_download": s.PublicOriginalDownload})
 }
 func (h *Handler) adminSettings(w http.ResponseWriter, r *http.Request) {
 	s, e := h.repo.Get(r.Context())

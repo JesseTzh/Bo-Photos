@@ -3,9 +3,10 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useAlbums } from "../features/albums/api";
 import { albumPublicHref } from "../features/albums/routes";
-import { useGallery } from "../features/assets/api";
+import { useAsset, useGallery } from "../features/assets/api";
+import { AssetMedia } from "../features/assets/asset-media";
 import { PublicNav } from "../features/site/public-nav";
-import { useVisit } from "../features/site/api";
+import { usePublicSettings, useVisit } from "../features/site/api";
 import { AppLink } from "../shared/adapters/link";
 import { useAppRouter } from "../shared/adapters/navigation";
 
@@ -15,12 +16,17 @@ export function HomePage() {
   const reduceMotion = useReducedMotion();
   const gallery = useGallery({ page: 1, pageSize: 8, featured: true });
   const albums = useAlbums();
+  const settings = usePublicSettings();
+  const configuredHero = useAsset(settings.data?.hero_asset_id, Boolean(settings.data?.hero_asset_id));
   const heroImages = useMemo(
     () => gallery.data?.items.filter((item) => item.preview_url || item.thumbnail_url).slice(0, 5) ?? [],
     [gallery.data?.items]
   );
   const [currentIndex, setCurrentIndex] = useState(0);
   const currentImage = heroImages[currentIndex];
+  const currentMedia = configuredHero.data ?? currentImage;
+  const hasConfiguredHero = Boolean(configuredHero.data);
+  const showHeroText = settings.data?.hero_show_text !== false;
 
   useEffect(() => {
     if (heroImages.length < 2) return;
@@ -47,19 +53,16 @@ export function HomePage() {
       <section className="relative h-[100dvh] min-h-[480px] w-full overflow-hidden">
         <div className="absolute inset-0 z-0">
           <AnimatePresence mode="sync">
-            {currentImage ? (
+            {currentMedia ? (
               <motion.div
-                key={currentImage.id}
+                key={currentMedia.id}
                 initial={reduceMotion ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: reduceMotion ? 0 : 1.8, ease: [0.25, 0.1, 0.25, 1] }}
                 className="absolute inset-0"
               >
-                <div
-                  className="absolute inset-0 bg-cover bg-center"
-                  style={{ backgroundImage: `url(${currentImage.preview_url || currentImage.thumbnail_url})` }}
-                />
+                <AssetMedia asset={currentMedia} autoPlay loop muted loading="eager" className="absolute inset-0 h-full w-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-media-scrim/80 via-media-scrim/30 to-media-scrim/20" />
                 <div className="home-hero-vignette absolute inset-0" />
               </motion.div>
@@ -77,35 +80,39 @@ export function HomePage() {
           }}
         >
           <div className="flex shrink-0 items-center py-1">
-            <motion.span
-              initial={reduceMotion ? false : { opacity: 0, x: -16 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: reduceMotion ? 0 : 0.2, duration: reduceMotion ? 0 : 0.8 }}
-              className="text-xs font-light uppercase tracking-[0.25em] text-on-media/80"
-            >
-              Photography
-            </motion.span>
+            {showHeroText ? (
+              <motion.span
+                initial={reduceMotion ? false : { opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: reduceMotion ? 0 : 0.2, duration: reduceMotion ? 0 : 0.8 }}
+                className="text-xs font-light uppercase tracking-[0.25em] text-on-media/80"
+              >
+                Photography
+              </motion.span>
+            ) : null}
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col items-center justify-center text-center">
-            <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: 28 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: reduceMotion ? 0 : 0.5, duration: reduceMotion ? 0 : 1, ease: "easeOut" }}
-            >
-              <p className="mb-2 text-[10px] uppercase tracking-[0.35em] text-on-media/50 sm:mb-3 sm:text-xs">
-                Visual Storytelling
-              </p>
-              <h1 className="mb-3 text-4xl font-light leading-[1.1] text-on-media sm:mb-4 sm:text-5xl md:text-6xl lg:text-7xl">
-                <span className="block">Every Moment</span>
-                <span className="home-hero-accent-text block bg-clip-text text-transparent">
-                  Tells a Story
-                </span>
-              </h1>
-              <p className="mx-auto max-w-[260px] text-xs font-light leading-relaxed text-on-media/60 sm:max-w-sm sm:text-sm">
-                捕捉光影，定格永恒 - 用镜头记录生活的美好瞬间
-              </p>
-            </motion.div>
+            {showHeroText ? (
+              <motion.div
+                initial={reduceMotion ? false : { opacity: 0, y: 28 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: reduceMotion ? 0 : 0.5, duration: reduceMotion ? 0 : 1, ease: "easeOut" }}
+              >
+                <p className="mb-2 text-[10px] uppercase tracking-[0.35em] text-on-media/50 sm:mb-3 sm:text-xs">
+                  Visual Storytelling
+                </p>
+                <h1 className="mb-3 text-4xl font-light leading-[1.1] text-on-media sm:mb-4 sm:text-5xl md:text-6xl lg:text-7xl">
+                  <span className="block">Every Moment</span>
+                  <span className="home-hero-accent-text block bg-clip-text text-transparent">
+                    Tells a Story
+                  </span>
+                </h1>
+                <p className="mx-auto max-w-[260px] text-xs font-light leading-relaxed text-on-media/60 sm:max-w-sm sm:text-sm">
+                  捕捉光影，定格永恒 - 用镜头记录生活的美好瞬间
+                </p>
+              </motion.div>
+            ) : null}
           </div>
 
           <div className="mb-6 grid shrink-0 grid-cols-3 items-center gap-2 py-1 sm:mb-10 md:mb-14">
@@ -115,7 +122,7 @@ export function HomePage() {
               transition={{ delay: reduceMotion ? 0 : 0.8, duration: reduceMotion ? 0 : 0.7 }}
               className="flex items-center gap-2 sm:gap-3"
             >
-              {heroImages.length > 0 ? (
+              {!hasConfiguredHero && heroImages.length > 0 ? (
                 <>
                   <span className="select-none font-mono text-[10px] text-on-media/50 tabular-nums sm:text-xs">
                     {String(currentIndex + 1).padStart(2, "0")}
@@ -155,7 +162,7 @@ export function HomePage() {
               transition={{ delay: reduceMotion ? 0 : 0.8, duration: reduceMotion ? 0 : 0.7 }}
               className="flex items-center justify-end gap-1 sm:gap-2"
             >
-              {heroImages.length > 0 ? (
+              {!hasConfiguredHero && heroImages.length > 0 ? (
                 <>
                   <button
                     type="button"

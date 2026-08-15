@@ -668,6 +668,7 @@ components:
         thumbnail_url: { type: string }
         preview_url: { type: string }
         original_url: { type: string }
+        video_url: { type: string }
         error_code: { type: string }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
@@ -856,11 +857,13 @@ components:
           items: { $ref: "#/components/schemas/NamedCount" }
     PublicSettings:
       type: object
-      required: [site_title, site_author, site_favicon_url, about_intro, about_gallery_asset_ids, gallery_layout, public_original_download]
+      required: [site_title, site_author, site_favicon_url, hero_asset_id, hero_show_text, about_intro, about_gallery_asset_ids, gallery_layout, public_original_download]
       properties:
         site_title: { type: string }
         site_author: { type: string }
         site_favicon_url: { type: string }
+        hero_asset_id: { type: string }
+        hero_show_text: { type: boolean }
         about_intro: { type: string }
         about_social_instagram: { type: string }
         about_social_xiaohongshu: { type: string }

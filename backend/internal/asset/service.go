@@ -1,6 +1,8 @@
 package asset
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -69,11 +71,22 @@ func (s *Service) Upload(ctx context.Context, originalName string, source io.Rea
 	}
 	format, detectErr := imageproc.DetectFormat(stagingFile)
 	_ = stagingFile.Close()
+	extension, mimeType := formatInfo(format)
+	isVideo := false
+	if detectErr != nil {
+		videoFile, openErr := s.storage.Open(staged.Key)
+		if openErr != nil {
+			_ = s.storage.Purge(staged.Key)
+			return UploadResult{}, openErr
+		}
+		extension, mimeType, detectErr = detectVideoFormat(videoFile, originalName)
+		_ = videoFile.Close()
+		isVideo = detectErr == nil
+	}
 	if detectErr != nil {
 		_ = s.storage.Purge(staged.Key)
 		return UploadResult{}, detectErr
 	}
-	extension, mimeType := formatInfo(format)
 	originalKey, err := s.storage.PromoteOriginal(staged.Key, id, extension)
 	if err != nil {
 		return UploadResult{}, err
@@ -85,9 +98,13 @@ func (s *Service) Upload(ctx context.Context, originalName string, source io.Rea
 		return UploadResult{}, err
 	}
 	now := time.Now().UTC()
+	status := StatusProcessing
+	if isVideo {
+		status = StatusReady
+	}
 	item := Asset{
 		ID:                id,
-		Status:            StatusProcessing,
+		Status:            status,
 		OriginalName:      filepath.Base(originalName),
 		OriginalKey:       originalKey,
 		SHA256:            staged.SHA256,
@@ -103,6 +120,9 @@ func (s *Service) Upload(ctx context.Context, originalName string, source io.Rea
 		_ = s.storage.Purge(originalKey)
 		return UploadResult{}, err
 	}
+	if isVideo {
+		return UploadResult{Asset: item, DuplicateAssetIDs: duplicates}, nil
+	}
 	if s.queue == nil {
 		_ = s.repository.Transition(ctx, id, StatusFailed, "ASSET_QUEUE_UNAVAILABLE")
 		return UploadResult{}, errors.New("asset queue unavailable")
@@ -112,6 +132,22 @@ func (s *Service) Upload(ctx context.Context, originalName string, source io.Rea
 		return UploadResult{}, err
 	}
 	return UploadResult{Asset: item, DuplicateAssetIDs: duplicates}, nil
+}
+
+func detectVideoFormat(reader io.Reader, originalName string) (string, string, error) {
+	buffered := bufio.NewReader(reader)
+	header, _ := buffered.Peek(32)
+	extension := strings.ToLower(filepath.Ext(originalName))
+	if len(header) >= 12 && string(header[4:8]) == "ftyp" {
+		if extension == ".mov" {
+			return ".mov", "video/quicktime", nil
+		}
+		return ".mp4", "video/mp4", nil
+	}
+	if len(header) >= 4 && bytes.Equal(header[:4], []byte{0x1a, 0x45, 0xdf, 0xa3}) && extension == ".webm" {
+		return ".webm", "video/webm", nil
+	}
+	return "", "", imageproc.ErrUnsupportedFormat
 }
 
 func (s *Service) Process(ctx context.Context, id string) {
@@ -173,6 +209,9 @@ func (s *Service) Retry(ctx context.Context, id string) error {
 		return err
 	}
 	if item.Status != StatusReady && item.Status != StatusFailed {
+		return ErrInvalidTransition
+	}
+	if strings.HasPrefix(item.MIMEType, "video/") {
 		return ErrInvalidTransition
 	}
 	originalPath, err := s.storage.Resolve(item.OriginalKey)

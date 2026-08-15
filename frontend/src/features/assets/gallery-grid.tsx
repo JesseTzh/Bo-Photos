@@ -1,6 +1,7 @@
 import { Empty, Skeleton } from "antd";
 import type { Asset } from "./schema";
 import { AppLink } from "../../shared/adapters/link";
+import { AssetMedia } from "./asset-media";
 
 interface GalleryGridProps {
   assets?: Asset[];
@@ -28,11 +29,8 @@ export function GalleryGrid({ assets, loading }: GalleryGridProps) {
           key={item.id}
           href={`/preview/${item.id}`}
         >
-          <img
-            src={item.thumbnail_url || item.preview_url}
-            alt={item.title || item.original_name}
-            loading="lazy"
-            decoding="async"
+          <AssetMedia
+            asset={item}
             className="block w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
             style={{ aspectRatio: item.width > 0 && item.height > 0 ? `${item.width}/${item.height}` : "4/3" }}
           />

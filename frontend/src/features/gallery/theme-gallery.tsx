@@ -2,6 +2,7 @@ import { Check, LayoutGrid, Rows, Settings2, SlidersHorizontal, X, ArrowUpDown }
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Empty, Pagination, Spin } from "antd";
 import type { Asset, AssetPage } from "../assets/schema";
+import { AssetMedia } from "../assets/asset-media";
 import { AppLink } from "../../shared/adapters/link";
 import { cn } from "../../shared/lib/utils";
 import { VirtualWaterfallGallery } from "./virtual-waterfall-gallery";
@@ -208,11 +209,8 @@ function SingleGallery({ assets, previewSearch = "" }: { assets: Asset[]; previe
     <div className="mx-auto w-full max-w-[900px] space-y-4 px-3 pb-16 sm:px-4 md:px-6">
       {assets.map((asset) => (
         <AppLink key={asset.id} href={`/preview/${asset.id}${previewSearch}`} className="group block overflow-hidden rounded-xl bg-muted">
-          <img
-            src={asset.preview_url || asset.thumbnail_url}
-            alt={asset.title || asset.original_name}
-            loading="lazy"
-            decoding="async"
+          <AssetMedia
+            asset={asset}
             className="h-auto w-full object-cover transition-opacity duration-300 group-hover:opacity-95"
           />
           <div className="border-x border-b border-border bg-card px-4 py-3">

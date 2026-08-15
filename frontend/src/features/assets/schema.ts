@@ -29,9 +29,14 @@ export interface Asset {
   thumbnail_url?: string;
   preview_url?: string;
   original_url?: string;
+  video_url?: string;
   error_code?: string;
   created_at?: string;
   updated_at?: string;
+}
+
+export function isVideoAsset(asset: Pick<Asset, "mime_type">) {
+  return asset.mime_type?.startsWith("video/") ?? false;
 }
 
 export interface AssetPage {

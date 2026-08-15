@@ -112,6 +112,7 @@ export function UploadPanel({ onAssetReady }: UploadPanelProps) {
       <Upload.Dragger
         className="asset-upload-dragger"
         multiple
+        accept="image/*,video/mp4,video/webm,video/quicktime,.mov"
         showUploadList={false}
         beforeUpload={(file) => {
           if (activeCount >= maxUploadFiles) {
@@ -123,7 +124,7 @@ export function UploadPanel({ onAssetReady }: UploadPanelProps) {
         }}
       >
         <p className="ant-upload-drag-icon"><InboxOutlined /></p>
-        <p className="ant-upload-text">拖入图片，或点击选择多个文件</p>
+        <p className="ant-upload-text">拖入图片或视频，或点击选择多个文件</p>
       </Upload.Dragger>
       {queue.items.length ? (
         <>
@@ -137,7 +138,9 @@ export function UploadPanel({ onAssetReady }: UploadPanelProps) {
             renderItem={(item) => (
               <List.Item className="upload-queue-item">
                 <List.Item.Meta
-                  avatar={<Image src={item.previewUrl} alt={item.file.name} className="upload-preview" width={64} height={64} />}
+                  avatar={item.file.type.startsWith("video/") ? (
+                    <video src={item.previewUrl} className="upload-preview" width={64} height={64} muted />
+                  ) : <Image src={item.previewUrl} alt={item.file.name} className="upload-preview" width={64} height={64} />}
                   title={<Space wrap><span>{item.file.name}</span><Button size="small" icon={<EditOutlined />} onClick={() => setEditingKey(item.key)}>信息</Button></Space>}
                   description={<UploadItemDescription item={item} onCopy={copyDuplicateIds} onDelete={deleteUploadedDuplicate} />}
                 />
@@ -152,7 +155,7 @@ export function UploadPanel({ onAssetReady }: UploadPanelProps) {
       ) : null}
       <Modal
         open={Boolean(editingItem)}
-        title="图片信息"
+        title="素材信息"
         onCancel={() => setEditingKey(undefined)}
         onOk={() => itemForm.submit()}
         width={760}

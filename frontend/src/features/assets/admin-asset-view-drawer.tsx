@@ -1,9 +1,10 @@
 import { DownloadOutlined } from "@ant-design/icons";
-import { Button, Descriptions, Drawer, Image, Space, Tag } from "antd";
+import { Button, Descriptions, Drawer, Space, Tag } from "antd";
 import { useAlbums } from "../albums/api";
 import { flattenTags, useAssetTags, useTags } from "../tags/api";
 import { useAssetAlbums } from "./admin-api";
 import type { Asset } from "./schema";
+import { AssetMedia } from "./asset-media";
 
 interface AdminAssetViewDrawerProps {
   asset?: Asset;
@@ -24,12 +25,13 @@ export function AdminAssetViewDrawer({ asset, open, onClose }: AdminAssetViewDra
     .map((album) => album.name);
 
   return (
-    <Drawer open={open} size={620} title="图片详情" onClose={onClose}>
+    <Drawer open={open} size={620} title="素材详情" onClose={onClose}>
       {asset ? (
         <Space orientation="vertical" size="large" className="drawer-stack">
-          {asset.preview_url ? <Image src={asset.preview_url} alt={asset.title || asset.original_name} /> : null}
+          {asset.preview_url || asset.video_url ? <AssetMedia asset={asset} controls className="w-full" /> : null}
           <Descriptions column={1} bordered size="small">
             <Descriptions.Item label="文件名">{asset.original_name}</Descriptions.Item>
+            <Descriptions.Item label="类型">{asset.mime_type || "-"}</Descriptions.Item>
             <Descriptions.Item label="状态"><Tag className={`asset-status-tag asset-status-tag--${asset.status}`}>{asset.status}</Tag></Descriptions.Item>
             <Descriptions.Item label="尺寸">{asset.width} x {asset.height}</Descriptions.Item>
             <Descriptions.Item label="大小">{asset.byte_size ? `${(asset.byte_size / 1048576).toFixed(2)} MB` : "-"}</Descriptions.Item>

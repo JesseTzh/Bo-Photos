@@ -23,7 +23,7 @@ func TestSettingsDefaultsAndHashedVisitLogging(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !settings.AnalyticsEnabled || settings.AnalyticsRetentionDays != 90 || !settings.PublicOriginalDownload {
+	if !settings.AnalyticsEnabled || settings.AnalyticsRetentionDays != 90 || !settings.PublicOriginalDownload || !settings.HeroShowText {
 		t.Fatalf("defaults = %#v", settings)
 	}
 	if err := repo.Log(context.Background(), "/", "home", "203.0.113.1", "test", ""); err != nil {

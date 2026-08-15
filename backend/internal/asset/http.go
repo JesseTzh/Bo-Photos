@@ -46,6 +46,7 @@ type AssetDTO struct {
 	ThumbnailURL   string     `json:"thumbnail_url,omitempty"`
 	PreviewURL     string     `json:"preview_url,omitempty"`
 	OriginalURL    string     `json:"original_url,omitempty"`
+	VideoURL       string     `json:"video_url,omitempty"`
 	ErrorCode      string     `json:"error_code,omitempty"`
 	CreatedAt      time.Time  `json:"created_at"`
 	UpdatedAt      time.Time  `json:"updated_at"`
@@ -397,6 +398,9 @@ func toDTO(item Asset) AssetDTO {
 	}
 	if item.OriginalKey != "" {
 		dto.OriginalURL = base + "/original"
+	}
+	if strings.HasPrefix(item.MIMEType, "video/") {
+		dto.VideoURL = base + "/content"
 	}
 	return dto
 }

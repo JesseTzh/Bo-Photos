@@ -5,7 +5,7 @@ import { type Album, useAlbums, useSetAlbumCover } from "../albums/api";
 import { flattenTags, useAssetTags, useSaveAssetTags, useTags } from "../tags/api";
 import { type AssetUpdate, useAssetAlbums, useSaveAssetAlbums, useUpdateAsset } from "./admin-api";
 import { readReferenceExif } from "./exif";
-import type { Asset } from "./schema";
+import { isVideoAsset, type Asset } from "./schema";
 
 interface AdminAssetEditDrawerProps {
   asset?: Asset;
@@ -52,7 +52,7 @@ export function AdminAssetEditDrawer({ asset, open, onClose, onSaved }: AdminAss
     await updateAsset.mutateAsync({ id: asset.id, input: toAssetInput(values) });
     await saveAssetTags.mutateAsync({ assetId: asset.id, tagIds });
     await saveAssetAlbums.mutateAsync({ assetId: asset.id, albumIds });
-    messageApi.success("图片信息已保存");
+    messageApi.success("素材信息已保存");
     onSaved();
     onClose();
   }
@@ -64,7 +64,7 @@ export function AdminAssetEditDrawer({ asset, open, onClose, onSaved }: AdminAss
   }
 
   return (
-    <Drawer open={open} size={720} title="编辑图片" onClose={onClose}>
+    <Drawer open={open} size={720} title="编辑素材" onClose={onClose}>
       {contextHolder}
       {asset ? (
         <Form form={form} layout="vertical" onFinish={save}>
@@ -80,7 +80,7 @@ export function AdminAssetEditDrawer({ asset, open, onClose, onSaved }: AdminAss
             <Form.Item name="featured" label="精选" valuePropName="checked"><Switch /></Form.Item>
             <Form.Item name="sort" label="排序"><InputNumber /></Form.Item>
           </Space>
-          {boundAlbums.length ? (
+          {boundAlbums.length && !isVideoAsset(asset) ? (
             <Space wrap className="asset-cover-action">
               <Select style={{ minWidth: 220 }} value={coverAlbumId} options={boundAlbums.map(albumOption)} onChange={setCoverAlbumId} />
               <Button icon={<StarOutlined />} onClick={() => void makeCover()} loading={setAlbumCover.isPending}>设为相册封面</Button>
