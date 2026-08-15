@@ -1,5 +1,4 @@
 import { Empty } from "antd";
-import { ArrowLeft } from "lucide-react";
 import type { Album } from "../features/albums/api";
 import { useAlbums } from "../features/albums/api";
 import { albumPublicHref } from "../features/albums/routes";
@@ -46,11 +45,6 @@ export function CoversPage() {
     <div className="min-h-screen bg-background">
       <PublicNav />
       <div className="container mx-auto mb-12 px-4 pt-20">
-        <AppLink href="/gallery" className="mb-6 inline-flex items-center gap-2 rounded-full px-0 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" />
-          返回图库
-        </AppLink>
-
         {!items.length && !albums.isPending ? <Empty description="暂无相册封面" /> : null}
 
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-2 md:gap-12">
