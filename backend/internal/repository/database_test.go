@@ -70,7 +70,6 @@ func TestMigrateCreatesFoundationTables(t *testing.T) {
 
 	for _, table := range []string{
 		"administrators", "sessions", "configs",
-		"guides", "guide_modules", "guide_content_blocks", "guide_toc", "guide_albums",
 		"visit_logs",
 	} {
 		var name string
@@ -88,11 +87,6 @@ func TestMigrateCreatesFoundationTables(t *testing.T) {
 		"album_assets_asset_idx",
 		"asset_tags_tag_asset_idx",
 		"tags_parent_idx",
-		"guides_public_idx",
-		"guide_modules_guide_sort_idx",
-		"guide_content_blocks_module_sort_idx",
-		"guide_toc_guide_sort_idx",
-		"guide_albums_guide_sort_idx",
 		"visit_logs_created_idx",
 	} {
 		var name string

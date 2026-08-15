@@ -16,7 +16,6 @@ import (
 	"github.com/besscroft/bophotos/backend/internal/auth"
 	"github.com/besscroft/bophotos/backend/internal/config"
 	"github.com/besscroft/bophotos/backend/internal/frontend"
-	"github.com/besscroft/bophotos/backend/internal/guide"
 	"github.com/besscroft/bophotos/backend/internal/imageproc"
 	"github.com/besscroft/bophotos/backend/internal/jobs"
 	"github.com/besscroft/bophotos/backend/internal/media"
@@ -91,8 +90,6 @@ func run() error {
 	albumHTTP := album.NewHTTPHandler(album.NewService(albumRepository), albumRepository)
 	tagRepository := tag.NewRepository(db)
 	tagHTTP := tag.NewHTTPHandler(tag.NewService(tagRepository), tagRepository)
-	guideRepository := guide.NewRepository(db)
-	guideHTTP := guide.NewHTTPHandler(guide.NewService(guideRepository), guideRepository)
 	siteHTTP := site.NewHandler(siteRepository, runtime.DataDir)
 	cleanup := jobs.NewCleanup(assetRepository, localStorage, time.Hour, 30*24*time.Hour)
 	go cleanup.Run(ctx, time.Hour)
@@ -103,14 +100,12 @@ func run() error {
 	publicAPI.Mount("/assets", assetHTTP.PublicRoutes())
 	publicAPI.Mount("/albums", albumHTTP.PublicRoutes())
 	publicAPI.Mount("/tags", tagHTTP.PublicRoutes())
-	publicAPI.Mount("/guides", guideHTTP.PublicRoutes())
 	siteHTTP.RegisterPublic(publicAPI)
 	versionedAPI.Mount("/public", publicAPI)
 	adminAPI := chi.NewRouter()
 	adminAPI.Mount("/assets", assetHTTP.AdminRoutes(tagHTTP.RegisterAssetRoutes))
 	adminAPI.Mount("/albums", albumHTTP.AdminRoutes())
 	adminAPI.Mount("/tags", tagHTTP.AdminRoutes())
-	adminAPI.Mount("/guides", guideHTTP.AdminRoutes())
 	siteHTTP.RegisterAdmin(adminAPI)
 	versionedAPI.Mount(
 		"/admin",

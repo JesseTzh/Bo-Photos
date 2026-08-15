@@ -544,18 +544,6 @@ paths:
       responses:
         "204":
           description: Tag moved without creating a cycle
-  /public/guides:
-    get:
-      operationId: listPublicGuides
-      responses:
-        "200": { description: Published Guides }
-  /public/guides/{id}:
-    get:
-      operationId: getPublicGuide
-      parameters: [{ $ref: "#/components/parameters/GuideID" }]
-      responses:
-        "200": { description: Published Guide with modules, TOC, and albums }
-        "404": { $ref: "#/components/responses/APIError" }
   /public/settings:
     get:
       operationId: getPublicSettings
@@ -575,22 +563,6 @@ paths:
             schema: { $ref: "#/components/schemas/VisitInput" }
       responses:
         "204": { description: Visit accepted or analytics disabled }
-  /admin/guides:
-    get:
-      operationId: listAdminGuides
-      security: [{ sessionCookie: [] }]
-      responses:
-        "200": { description: Guide list }
-    post:
-      operationId: createGuide
-      security: [{ sessionCookie: [] }]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/GuideInput" }
-      responses:
-        "201": { description: Guide created }
   /admin/dashboard:
     get:
       operationId: getDashboard
@@ -637,64 +609,6 @@ paths:
       security: [{ sessionCookie: [] }]
       responses:
         "200": { description: Data filesystem usage }
-  /admin/guides/{id}:
-    get:
-      operationId: getAdminGuide
-      security: [{ sessionCookie: [] }]
-      parameters: [{ $ref: "#/components/parameters/GuideID" }]
-      responses:
-        "200": { description: Guide editor payload }
-    put:
-      operationId: updateGuide
-      security: [{ sessionCookie: [] }]
-      parameters: [{ $ref: "#/components/parameters/GuideID" }]
-      responses:
-        "200": { description: Guide updated }
-    delete:
-      operationId: deleteGuide
-      security: [{ sessionCookie: [] }]
-      parameters: [{ $ref: "#/components/parameters/GuideID" }]
-      responses:
-        "204": { description: Guide soft-deleted }
-  /admin/guides/{id}/modules:
-    get:
-      operationId: listGuideModules
-      security: [{ sessionCookie: [] }]
-      parameters: [{ $ref: "#/components/parameters/GuideID" }]
-      responses:
-        "200": { description: Ordered modules }
-    post:
-      operationId: createGuideModule
-      security: [{ sessionCookie: [] }]
-      parameters: [{ $ref: "#/components/parameters/GuideID" }]
-      responses:
-        "201": { description: Module created }
-  /admin/guides/{id}/toc:
-    get:
-      operationId: getGuideTOC
-      security: [{ sessionCookie: [] }]
-      parameters: [{ $ref: "#/components/parameters/GuideID" }]
-      responses:
-        "200": { description: Ordered TOC }
-    put:
-      operationId: replaceGuideTOC
-      security: [{ sessionCookie: [] }]
-      parameters: [{ $ref: "#/components/parameters/GuideID" }]
-      responses:
-        "204": { description: TOC replaced }
-  /admin/guides/{id}/albums:
-    get:
-      operationId: getGuideAlbums
-      security: [{ sessionCookie: [] }]
-      parameters: [{ $ref: "#/components/parameters/GuideID" }]
-      responses:
-        "200": { description: Ordered related albums }
-    put:
-      operationId: replaceGuideAlbums
-      security: [{ sessionCookie: [] }]
-      parameters: [{ $ref: "#/components/parameters/GuideID" }]
-      responses:
-        "204": { description: Related albums replaced }
 components:
   parameters:
     AssetID:
@@ -713,11 +627,6 @@ components:
       required: true
       schema: { type: string }
     TagID:
-      name: id
-      in: path
-      required: true
-      schema: { type: string }
-    GuideID:
       name: id
       in: path
       required: true
@@ -894,19 +803,6 @@ components:
         name: { type: string, minLength: 1 }
         category: { type: string }
         detail: { type: string }
-    GuideInput:
-      type: object
-      required: [title, days, published, sort]
-      properties:
-        title: { type: string, minLength: 1 }
-        country: { type: string }
-        city: { type: string }
-        days: { type: integer, minimum: 0 }
-        start_date: { type: [string, "null"], format: date-time }
-        end_date: { type: [string, "null"], format: date-time }
-        cover_asset_id: { type: [string, "null"] }
-        published: { type: boolean }
-        sort: { type: integer }
     CountPoint:
       type: object
       required: [date, count]
@@ -921,13 +817,11 @@ components:
         count: { type: integer }
     Dashboard:
       type: object
-      required: [ImagesTotal, ImagesPublic, AlbumsTotal, GuidesTotal, GuidesPublic, VisitsTotal, VisitsToday, VisitsYesterday, CamerasTotal, LensesTotal, last_7_days]
+      required: [ImagesTotal, ImagesPublic, AlbumsTotal, VisitsTotal, VisitsToday, VisitsYesterday, CamerasTotal, LensesTotal, last_7_days]
       properties:
         ImagesTotal: { type: integer }
         ImagesPublic: { type: integer }
         AlbumsTotal: { type: integer }
-        GuidesTotal: { type: integer }
-        GuidesPublic: { type: integer }
         VisitsTotal: { type: integer }
         VisitsToday: { type: integer }
         VisitsYesterday: { type: integer }
@@ -996,7 +890,7 @@ components:
       required: [path, page_type]
       properties:
         path: { type: string }
-        page_type: { type: string, enum: [home, gallery, album, guide, about, other] }
+        page_type: { type: string, enum: [home, gallery, album, about, other] }
         referrer: { type: string }
     PasswordRequest:
       type: object

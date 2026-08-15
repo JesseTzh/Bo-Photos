@@ -1,4 +1,4 @@
-import { CameraOutlined, EyeOutlined, FolderOpenOutlined, LineChartOutlined, PictureOutlined, ReadOutlined } from "@ant-design/icons";
+import { CameraOutlined, EyeOutlined, FolderOpenOutlined, LineChartOutlined, PictureOutlined } from "@ant-design/icons";
 import { Card, Empty, Skeleton, Space, Typography } from "antd";
 import { Link } from "react-router-dom";
 import { useDashboard, useDisk, type CountPoint, type Dashboard, type NamedCount } from "../features/site/api";
@@ -41,7 +41,6 @@ function statCards(data: Dashboard, diskLabel: string) {
   return [
     { title: "图片", value: `${data.ImagesTotal}`, meta: `公开 ${data.ImagesPublic}`, icon: <PictureOutlined />, href: "/admin/images" },
     { title: "相册", value: `${data.AlbumsTotal}`, meta: "全部相册", icon: <FolderOpenOutlined />, href: "/admin/albums" },
-    { title: "Guides", value: `${data.GuidesTotal}`, meta: `发布 ${data.GuidesPublic}`, icon: <ReadOutlined />, href: "/admin/guides" },
     { title: "相机", value: `${data.CamerasTotal}`, meta: "已识别型号", icon: <CameraOutlined /> },
     { title: "镜头", value: `${data.LensesTotal}`, meta: "已识别镜头", icon: <CameraOutlined /> },
     { title: "今日访问", value: `${data.VisitsToday}`, meta: `昨日 ${data.VisitsYesterday} / 总计 ${data.VisitsTotal}`, icon: <EyeOutlined />, href: "/admin/analytics" },

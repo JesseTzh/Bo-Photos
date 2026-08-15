@@ -1,7 +1,7 @@
 CREATE TABLE visit_logs (
     id TEXT PRIMARY KEY,
     path TEXT NOT NULL,
-    page_type TEXT NOT NULL CHECK (page_type IN ('home','gallery','album','guide','about','other')),
+    page_type TEXT NOT NULL CHECK (page_type IN ('home','gallery','album','about','other')),
     ip_hash TEXT,
     user_agent TEXT,
     referrer TEXT,

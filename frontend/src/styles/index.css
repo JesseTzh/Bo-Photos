@@ -500,9 +500,7 @@ select {
   gap: 1rem;
 }
 
-.asset-panel,
-.guide-editor-shell > aside,
-.guide-editor-shell > section {
+.asset-panel {
   padding: clamp(1.25rem, 4vw, 2rem);
   border: 1px solid var(--border);
   border-radius: 1rem;
@@ -511,9 +509,7 @@ select {
   backdrop-filter: blur(18px);
 }
 
-.dark .asset-panel,
-.dark .guide-editor-shell > aside,
-.dark .guide-editor-shell > section {
+.dark .asset-panel {
   background: rgb(27 32 41 / 82%);
 }
 
@@ -595,43 +591,6 @@ select {
 .selected-card,
 .selected-card .ant-card-body {
   color: var(--accent-foreground) !important;
-}
-
-.guide-detail-shell {
-  color: var(--foreground);
-  background:
-    linear-gradient(135deg, var(--background), color-mix(in srgb, var(--accent) 28%, var(--background)) 45%, var(--background));
-}
-
-.guide-cover-fallback {
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--accent) 65%, var(--background)), var(--muted));
-}
-
-.guide-cover-bottom-fade {
-  background: linear-gradient(to top, var(--background), color-mix(in srgb, var(--background) 48%, transparent), transparent);
-}
-
-.guide-tone-warm,
-.guide-tone-cool,
-.guide-tone-neutral {
-  background: color-mix(in srgb, var(--accent) 74%, transparent);
-  border-left-color: var(--primary);
-  color: var(--accent-foreground);
-}
-
-.guide-tone-cool {
-  border-left-color: var(--secondary);
-}
-
-.guide-tone-neutral {
-  border-left-color: var(--border);
-}
-
-.dark .guide-tone-warm,
-.dark .guide-tone-cool,
-.dark .guide-tone-neutral {
-  background: color-mix(in srgb, var(--accent) 68%, transparent);
 }
 
 .home-hero-fallback {
@@ -979,22 +938,6 @@ select {
   gap: 0.15rem;
 }
 
-.guide-editor-shell {
-  display: grid;
-  grid-template-columns: 240px minmax(0, 1fr) 320px;
-  gap: 1rem;
-  min-height: 70vh;
-}
-
-.guide-editor-shell > aside,
-.guide-editor-shell > section {
-  overflow: auto;
-}
-
-.guide-editor-shell aside .ant-btn {
-  margin-bottom: 0.5rem;
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1002,12 +945,6 @@ select {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-}
-
-@media (max-width: 900px) {
-  .guide-editor-shell {
-    grid-template-columns: 1fr;
   }
 }
 

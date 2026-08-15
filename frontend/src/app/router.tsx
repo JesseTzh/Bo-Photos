@@ -13,10 +13,6 @@ import { AdminAlbumEditPage } from "../pages/admin-album-edit-page";
 import { AdminAlbumImagesPage } from "../pages/admin-album-images-page";
 import { AdminTagsPage } from "../pages/admin-tags-page";
 import { AlbumsPage } from "../pages/albums-page";
-import { GuidesPage } from "../pages/guides-page";
-import { GuideDetailPage } from "../pages/guide-detail-page";
-import { AdminGuidesPage } from "../pages/admin-guides-page";
-import { AdminGuideEditorPage } from "../pages/admin-guide-editor-page";
 import { AboutPage } from "../pages/about-page";
 import { AdminSettingsPage } from "../pages/admin-settings-page";
 import { AdminAnalyticsPage } from "../pages/admin-analytics-page";
@@ -43,14 +39,6 @@ export const router = createBrowserRouter([
   {
     path: "/covers",
     element: <AlbumsPage coversOnly />
-  },
-  {
-    path: "/guides",
-    element: <GuidesPage />
-  },
-  {
-    path: "/guides/:id",
-    element: <GuideDetailPage />
   },
   { path: "/about", element: <AboutPage /> },
   {
@@ -97,8 +85,6 @@ export const router = createBrowserRouter([
       { path: "albums/:id/images", element: <AdminAlbumImagesPage /> },
       { path: "albums/:id/sort", element: <AdminAlbumSortPage /> },
       { path: "tags", element: <AdminTagsPage /> },
-      { path: "guides", element: <AdminGuidesPage /> },
-      { path: "guides/:id", element: <AdminGuideEditorPage /> },
       { path: "analytics", element: <AdminAnalyticsPage /> },
       { path: "settings", element: <AdminSettingsPage /> },
       { path: "account", element: <AdminAccountPage /> }

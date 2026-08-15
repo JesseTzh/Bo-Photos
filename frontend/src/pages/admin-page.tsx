@@ -1,6 +1,5 @@
 import {
   BarChartOutlined,
-  BookOutlined,
   CameraOutlined,
   DashboardOutlined,
   FolderOpenOutlined,
@@ -21,7 +20,6 @@ const navigation = [
   { key: "images", icon: <PictureOutlined />, label: "图片" },
   { key: "albums", icon: <FolderOpenOutlined />, label: "相册" },
   { key: "tags", icon: <TagsOutlined />, label: "标签" },
-  { key: "guides", icon: <BookOutlined />, label: "Guides" },
   { key: "analytics", icon: <BarChartOutlined />, label: "访问统计" },
   { key: "settings", icon: <SettingOutlined />, label: "站点设置" },
   { key: "account", icon: <UserOutlined />, label: "账户" }

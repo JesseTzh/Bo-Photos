@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 export interface SiteSettings{site_title:string;site_author:string;site_favicon_url:string;about_intro:string;about_social_instagram:string;about_social_xiaohongshu:string;about_social_weibo:string;about_social_github:string;about_gallery_asset_ids:string[];gallery_layout:"grid"|"single";public_original_download:boolean;admin_images_per_page:number;max_upload_files:number;preview_quality:number;preview_max_width:number;analytics_enabled:boolean;analytics_retention_days:number;analytics_timezone:string}
 export interface CountPoint{date:string;count:number}
 export interface NamedCount{name:string;count:number}
-export interface Dashboard{ImagesTotal:number;ImagesPublic:number;AlbumsTotal:number;GuidesTotal:number;GuidesPublic:number;VisitsTotal:number;VisitsToday:number;VisitsYesterday:number;CamerasTotal:number;LensesTotal:number;last_7_days:CountPoint[];TopCameras:NamedCount[];TopLenses:NamedCount[];PhotosByYear:NamedCount[]}
+export interface Dashboard{ImagesTotal:number;ImagesPublic:number;AlbumsTotal:number;VisitsTotal:number;VisitsToday:number;VisitsYesterday:number;CamerasTotal:number;LensesTotal:number;last_7_days:CountPoint[];TopCameras:NamedCount[];TopLenses:NamedCount[];PhotosByYear:NamedCount[]}
 export interface Analytics{dashboard:Dashboard;unique_visitors:number;hourly:CountPoint[];sources:NamedCount[];pages:NamedCount[]}
 export function usePublicSettings(){return useQuery({queryKey:["settings","public"],queryFn:()=>apiRequest<Partial<SiteSettings>>("/public/settings")})}
 export function useAdminSettings(){return useQuery({queryKey:["settings","admin"],queryFn:()=>apiRequest<SiteSettings>("/admin/settings")})}

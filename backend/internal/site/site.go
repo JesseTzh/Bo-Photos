@@ -166,12 +166,12 @@ func (r *Repository) Cleanup(ctx context.Context) error {
 }
 
 type Dashboard struct {
-	ImagesTotal, ImagesPublic, AlbumsTotal, GuidesTotal, GuidesPublic int
-	VisitsTotal, VisitsToday, VisitsYesterday                         int
-	CamerasTotal, LensesTotal                                         int
-	Last7Days                                                         []Point `json:"last_7_days"`
-	TopCameras, TopLenses                                             []NamedCount
-	PhotosByYear                                                      []NamedCount
+	ImagesTotal, ImagesPublic, AlbumsTotal    int
+	VisitsTotal, VisitsToday, VisitsYesterday int
+	CamerasTotal, LensesTotal                 int
+	Last7Days                                 []Point `json:"last_7_days"`
+	TopCameras, TopLenses                     []NamedCount
+	PhotosByYear                              []NamedCount
 }
 type Point struct {
 	Date  string `json:"date"`
@@ -189,7 +189,7 @@ func (r *Repository) Dashboard(ctx context.Context) (Dashboard, error) {
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
 	yesterday := today.AddDate(0, 0, -1)
 	tomorrow := today.AddDate(0, 0, 1)
-	err := r.db.QueryRowContext(ctx, `SELECT (SELECT COUNT(*) FROM assets WHERE status!='purged'),(SELECT COUNT(*) FROM assets WHERE status='ready' AND visible=1),(SELECT COUNT(*) FROM albums WHERE deleted_at IS NULL),(SELECT COUNT(*) FROM guides WHERE deleted_at IS NULL),(SELECT COUNT(*) FROM guides WHERE deleted_at IS NULL AND published=1),(SELECT COUNT(*) FROM visit_logs),(SELECT COUNT(*) FROM visit_logs WHERE created_at>=? AND created_at<?),(SELECT COUNT(*) FROM visit_logs WHERE created_at>=? AND created_at<?)`, today.UTC().Format(time.RFC3339Nano), tomorrow.UTC().Format(time.RFC3339Nano), yesterday.UTC().Format(time.RFC3339Nano), today.UTC().Format(time.RFC3339Nano)).Scan(&d.ImagesTotal, &d.ImagesPublic, &d.AlbumsTotal, &d.GuidesTotal, &d.GuidesPublic, &d.VisitsTotal, &d.VisitsToday, &d.VisitsYesterday)
+	err := r.db.QueryRowContext(ctx, `SELECT (SELECT COUNT(*) FROM assets WHERE status!='purged'),(SELECT COUNT(*) FROM assets WHERE status='ready' AND visible=1),(SELECT COUNT(*) FROM albums WHERE deleted_at IS NULL),(SELECT COUNT(*) FROM visit_logs),(SELECT COUNT(*) FROM visit_logs WHERE created_at>=? AND created_at<?),(SELECT COUNT(*) FROM visit_logs WHERE created_at>=? AND created_at<?)`, today.UTC().Format(time.RFC3339Nano), tomorrow.UTC().Format(time.RFC3339Nano), yesterday.UTC().Format(time.RFC3339Nano), today.UTC().Format(time.RFC3339Nano)).Scan(&d.ImagesTotal, &d.ImagesPublic, &d.AlbumsTotal, &d.VisitsTotal, &d.VisitsToday, &d.VisitsYesterday)
 	if err != nil {
 		return d, err
 	}

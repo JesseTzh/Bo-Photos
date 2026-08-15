@@ -108,8 +108,8 @@ GET /health/ready
 OpenAPI 文件位于 `backend/openapi/openapi.yaml`，统一前缀为 `/api/v1`。
 
 - `/auth`：登录、登出、当前会话。
-- `/public`：公开图片、相册、标签、指南、站点设置和访问记录。
-- `/admin`：需要登录的图片、相册、标签、指南、仪表盘、统计、设置、磁盘用量和密码管理。
+- `/public`：公开图片、相册、标签、站点设置和访问记录。
+- `/admin`：需要登录的图片、相册、标签、仪表盘、统计、设置、磁盘用量和密码管理。
 
 前端请求封装在 `frontend/src/api/client.ts`，默认携带同源 Cookie，并处理统一的成功和错误响应结构。
 
@@ -124,8 +124,6 @@ OpenAPI 文件位于 `backend/openapi/openapi.yaml`，统一前缀为 `/api/v1`�
 - `/gallery/:album`
 - `/albums`
 - `/covers`
-- `/guides`
-- `/guides/:id`
 - `/about`
 - `/preview/:id`
 - `/:album`
@@ -148,7 +146,6 @@ OpenAPI 文件位于 `backend/openapi/openapi.yaml`，统一前缀为 `/api/v1`�
 - `assets`：图片元数据、处理状态、媒体路径、EXIF 信息和可见性。
 - `albums`、`album_assets`：相册和相册图片排序。
 - `tags`、`asset_tags`：标签树和图片标签。
-- `guides` 相关表：指南内容、模块、目录和关联相册。
 - `visit_logs`：访问统计。
 
 ## 文件存储和图片处理

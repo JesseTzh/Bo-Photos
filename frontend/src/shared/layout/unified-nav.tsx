@@ -14,7 +14,6 @@ const navLinks = [
   { name: "序章", href: "/" },
   { name: "城隅寻迹", href: "/covers" },
   { name: "景行集", href: "/albums" },
-  { name: "攻略路书", href: "/guides" },
   { name: "关于我", href: "/about" }
 ];
 

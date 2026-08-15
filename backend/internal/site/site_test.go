@@ -67,7 +67,7 @@ func TestAnalyticsIncludesHourlySourcesAndPages(t *testing.T) {
 	}{
 		{"visit-1", "/gallery", "gallery", "direct", now.Add(10 * time.Minute)},
 		{"visit-2", "/gallery/travel", "gallery", "search", now.Add(20 * time.Minute)},
-		{"visit-3", "/guides", "guide", "direct", now.Add(-time.Hour)},
+		{"visit-3", "/about", "about", "direct", now.Add(-time.Hour)},
 	}
 	for _, visit := range visits {
 		_, err = db.Exec(
