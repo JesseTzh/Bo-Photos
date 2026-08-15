@@ -50,6 +50,14 @@ export function useAlbum(value?: string) {
   });
 }
 
+export function useAdminAlbum(id?: string) {
+  return useQuery({
+    queryKey: ["albums", "admin", id],
+    queryFn: () => apiRequest<Album>(`/admin/albums/${id}`),
+    enabled: Boolean(id)
+  });
+}
+
 export function useSaveAlbum() {
   const client = useQueryClient();
   return useMutation({
@@ -101,7 +109,11 @@ export function useReplaceAlbumAssets() {
         method: "PUT",
         body: JSON.stringify({ asset_ids: assetIds })
       }),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["albums"] })
+    onSuccess: (_, input) => {
+      client.invalidateQueries({ queryKey: ["albums"] });
+      client.invalidateQueries({ queryKey: ["albums", input.id, "assets"] });
+      client.invalidateQueries({ queryKey: ["assets"] });
+    }
   });
 }
 

@@ -66,6 +66,24 @@ export function useAdminAssets(query: AdminAssetQuery) {
   });
 }
 
+export function useAllAdminAssets(query: Omit<AdminAssetQuery, "page" | "pageSize"> = {}) {
+  return useQuery({
+    queryKey: ["assets", "admin", "all", query],
+    queryFn: async () => {
+      const items: Asset[] = [];
+      let page = 1;
+      let total = 0;
+      do {
+        const result = await apiRequest<AssetPage>(`/admin/assets?${adminSearch({ ...query, page, pageSize: 200 })}`);
+        items.push(...result.items);
+        total = result.total;
+        page += 1;
+      } while (items.length < total);
+      return items;
+    }
+  });
+}
+
 export function usePrivateAssets(query: { page: number; pageSize?: number }) {
   const search = new URLSearchParams({
     page: String(query.page),

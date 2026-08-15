@@ -905,11 +905,47 @@ select {
 }
 
 .admin-album-cover {
-  width: 88px;
-  height: 56px;
+  width: 88px !important;
+  height: 56px !important;
   object-fit: cover;
   border-radius: 6px;
   background: var(--muted);
+}
+
+.album-basic-form {
+  max-width: 860px;
+}
+
+.album-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.album-image-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.album-management-thumb,
+.album-picker-thumb {
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--muted);
+}
+
+.album-management-thumb {
+  width: 96px !important;
+  height: 64px !important;
+}
+
+.album-picker-thumb {
+  width: 72px !important;
+  height: 48px !important;
 }
 
 .album-sort-list {

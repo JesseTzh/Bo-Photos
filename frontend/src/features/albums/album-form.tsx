@@ -31,7 +31,6 @@ export function AlbumForm({ assetOptions }: AlbumFormProps) {
       </Space>
       <Form.Item name="license" label="授权协议"><Input /></Form.Item>
       <Form.Item name="cover_asset_id" label="封面"><Select allowClear showSearch options={assetOptions} /></Form.Item>
-      <Form.Item name="asset_ids" label="关联图片"><Select mode="multiple" allowClear showSearch options={assetOptions} /></Form.Item>
     </>
   );
 }

@@ -9,6 +9,8 @@ import { AdminAssetsPage } from "../pages/admin-assets-page";
 import { AdminDashboardPage } from "../pages/admin-dashboard-page";
 import { AdminAlbumsPage } from "../pages/admin-albums-page";
 import { AdminAlbumSortPage } from "../pages/admin-album-sort-page";
+import { AdminAlbumEditPage } from "../pages/admin-album-edit-page";
+import { AdminAlbumImagesPage } from "../pages/admin-album-images-page";
 import { AdminTagsPage } from "../pages/admin-tags-page";
 import { AlbumsPage } from "../pages/albums-page";
 import { GuidesPage } from "../pages/guides-page";
@@ -90,6 +92,9 @@ export const router = createBrowserRouter([
       { index: true, element: <AdminDashboardPage /> },
       { path: "images", element: <AdminAssetsPage /> },
       { path: "albums", element: <AdminAlbumsPage /> },
+      { path: "albums/new", element: <AdminAlbumEditPage /> },
+      { path: "albums/:id/edit", element: <AdminAlbumEditPage /> },
+      { path: "albums/:id/images", element: <AdminAlbumImagesPage /> },
       { path: "albums/:id/sort", element: <AdminAlbumSortPage /> },
       { path: "tags", element: <AdminTagsPage /> },
       { path: "guides", element: <AdminGuidesPage /> },
