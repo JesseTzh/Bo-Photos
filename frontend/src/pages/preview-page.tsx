@@ -1,6 +1,6 @@
 import { Alert, Spin, App as AntApp } from "antd";
-import { ArrowLeft, ChevronLeft, ChevronRight, Copy, Download, Expand, Link as LinkIcon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, Copy, Download, Expand, Link as LinkIcon } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { albumPublicHref } from "../features/albums/routes";
 import { useAsset, useGallery } from "../features/assets/api";
@@ -10,6 +10,7 @@ import { fetchAdminAsset, usePrivateAssets } from "../features/assets/admin-api"
 import { useVisit } from "../features/site/api";
 import { usePublicSettings } from "../features/site/api";
 import { useQuery } from "@tanstack/react-query";
+import { usePagedWheelNavigation } from "../shared/hooks/use-paged-wheel-navigation";
 
 function csv(search: URLSearchParams, key: string) {
   return search.get(key)?.split(",").filter(Boolean) ?? [];
@@ -47,6 +48,8 @@ export function PreviewPage() {
   const privateGallery = usePrivateAssets({ page: 1, pageSize: 200 });
   const settings = usePublicSettings();
   const [lightbox, setLightbox] = useState(false);
+  const desktopMediaRef = useRef<HTMLDivElement>(null);
+  const mobileMediaRef = useRef<HTMLDivElement>(null);
 
   const imageList = privateMode ? (privateGallery.data?.items ?? []) : (gallery.data?.items ?? []);
   const currentIndex = useMemo(() => imageList.findIndex((item) => item.id === id), [id, imageList]);
@@ -54,6 +57,13 @@ export function PreviewPage() {
   const next = currentIndex >= 0 && currentIndex < imageList.length - 1 ? imageList[currentIndex + 1] : undefined;
   const contextSearch = search.toString();
   const contextSuffix = contextSearch ? `?${contextSearch}` : "";
+  const navigatePage = useCallback((direction: -1 | 1) => {
+    const destination = direction < 0 ? previous : next;
+    if (destination) navigate(`/preview/${destination.id}${contextSuffix}`, { replace: true });
+  }, [contextSuffix, navigate, next, previous]);
+
+  usePagedWheelNavigation(desktopMediaRef, navigatePage, !lightbox);
+  usePagedWheelNavigation(mobileMediaRef, navigatePage, !lightbox);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -102,30 +112,10 @@ export function PreviewPage() {
   return (
     <main className="bg-background">
       <div className="hidden h-screen w-full flex-row overflow-hidden bg-background lg:flex">
-        <div className="relative flex min-w-0 flex-1 items-center justify-center">
+        <div ref={desktopMediaRef} className="relative flex min-w-0 flex-1 items-center justify-center overflow-hidden">
           <div className="flex h-full w-full items-center justify-center">
             <AssetMedia asset={item} controls={video} autoPlay={video} className="max-h-full max-w-full object-contain" />
           </div>
-          {previous ? (
-            <button
-              onClick={() => navigate(`/preview/${previous.id}${contextSuffix}`, { replace: true })}
-              aria-label="上一张"
-              className="absolute left-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl bg-media-scrim/40 text-on-media backdrop-blur-sm transition-colors hover:bg-media-scrim/60"
-              type="button"
-            >
-              <ChevronLeft size={20} />
-            </button>
-          ) : null}
-          {next ? (
-            <button
-              onClick={() => navigate(`/preview/${next.id}${contextSuffix}`, { replace: true })}
-              aria-label="下一张"
-              className="absolute right-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl bg-media-scrim/40 text-on-media backdrop-blur-sm transition-colors hover:bg-media-scrim/60"
-              type="button"
-            >
-              <ChevronRight size={20} />
-            </button>
-          ) : null}
         </div>
 
         <aside className="w-[300px] flex-shrink-0 overflow-y-auto border-l border-border bg-card xl:w-[340px]">
@@ -160,18 +150,8 @@ export function PreviewPage() {
           </button>
         </div>
 
-        <div className="relative w-full bg-muted/20">
+        <div ref={mobileMediaRef} className="relative w-full overflow-hidden bg-muted/20">
           <AssetMedia asset={item} controls={video} autoPlay={video} className="h-auto w-full" />
-          {previous ? (
-            <button onClick={() => navigate(`/preview/${previous.id}${contextSuffix}`, { replace: true })} aria-label="上一张" className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-media-scrim/40 text-on-media backdrop-blur-sm transition-colors hover:bg-media-scrim/60" type="button">
-              <ChevronLeft size={18} />
-            </button>
-          ) : null}
-          {next ? (
-            <button onClick={() => navigate(`/preview/${next.id}${contextSuffix}`, { replace: true })} aria-label="下一张" className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-media-scrim/40 text-on-media backdrop-blur-sm transition-colors hover:bg-media-scrim/60" type="button">
-              <ChevronRight size={18} />
-            </button>
-          ) : null}
         </div>
 
         <div className="border-t border-border bg-card">

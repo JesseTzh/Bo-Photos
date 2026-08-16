@@ -811,8 +811,7 @@ select {
   color: var(--status-private-text) !important;
 }
 
-.home-hero-accent-text,
-.home-hero-progress {
+.home-hero-accent-text {
   background-image: linear-gradient(90deg, var(--primary), color-mix(in srgb, var(--primary) 70%, var(--secondary)), var(--secondary));
 }
 

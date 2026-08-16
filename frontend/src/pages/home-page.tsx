@@ -1,6 +1,6 @@
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Volume2, VolumeX } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, Volume2, VolumeX } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAlbums } from "../features/albums/api";
 import { albumPublicHref } from "../features/albums/routes";
 import { AssetMedia } from "../features/assets/asset-media";
@@ -8,6 +8,7 @@ import { isVideoAsset } from "../features/assets/schema";
 import { PublicNav } from "../features/site/public-nav";
 import { useHomeAssets, usePublicSettings, useVisit } from "../features/site/api";
 import { AppLink } from "../shared/adapters/link";
+import { usePagedWheelNavigation } from "../shared/hooks/use-paged-wheel-navigation";
 import { useAppRouter } from "../shared/adapters/navigation";
 
 export function HomePage() {
@@ -26,48 +27,53 @@ export function HomePage() {
     return homeAssetIds.map((id) => byId.get(id)).filter((asset): asset is NonNullable<typeof asset> => Boolean(asset));
   }, [homeAssetIds, homeAssets.data]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [transitionDirection, setTransitionDirection] = useState<1 | -1>(1);
   const [heroMuted, setHeroMuted] = useState(true);
+  const heroRef = useRef<HTMLElement>(null);
   const currentMedia = heroMedia[currentIndex];
   const showHeroText = settings.data?.hero_show_text !== false;
   const currentIsVideo = Boolean(currentMedia && isVideoAsset(currentMedia));
   const showMediaOverlay = !currentIsVideo || settings.data?.hero_video_overlay !== false;
 
   useEffect(() => {
-    if (heroMedia.length < 2) return;
+    if (heroMedia.length < 2 || currentIsVideo) return;
     const timer = window.setInterval(() => {
+      setTransitionDirection(1);
       setCurrentIndex((value) => (value + 1) % heroMedia.length);
     }, 5000);
     return () => window.clearInterval(timer);
-  }, [heroMedia.length]);
+  }, [currentIsVideo, heroMedia.length]);
 
   useEffect(() => {
     if (currentIndex >= heroMedia.length) setCurrentIndex(0);
   }, [currentIndex, heroMedia.length]);
 
-  function nextHero() {
-    if (!heroMedia.length) return;
-    setCurrentIndex((value) => (value + 1) % heroMedia.length);
-  }
+  const navigateHero = useCallback((direction: -1 | 1) => {
+    if (direction > 0 && currentIndex >= heroMedia.length - 1) {
+      document.getElementById("home-portfolio")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    if (direction < 0 && currentIndex <= 0) return;
+    setTransitionDirection(direction);
+    setCurrentIndex((value) => Math.max(0, Math.min(heroMedia.length - 1, value + direction)));
+  }, [currentIndex, heroMedia.length]);
 
-  function previousHero() {
-    if (!heroMedia.length) return;
-    setCurrentIndex((value) => (value - 1 + heroMedia.length) % heroMedia.length);
-  }
+  usePagedWheelNavigation(heroRef, navigateHero, heroMedia.length > 0);
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="h-[100dvh] snap-y snap-mandatory overflow-y-auto bg-background">
       <PublicNav />
 
-      <section className="relative h-[100dvh] min-h-[480px] w-full overflow-hidden">
+      <section ref={heroRef} className="relative h-[100dvh] min-h-[480px] w-full snap-start snap-always overflow-hidden">
         <div className="absolute inset-0 z-0">
           <AnimatePresence mode="sync">
             {currentMedia ? (
               <motion.div
                 key={currentMedia.id}
-                initial={reduceMotion ? false : { opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: reduceMotion ? 0 : 1.8, ease: [0.25, 0.1, 0.25, 1] }}
+                initial={reduceMotion ? false : { opacity: 0, y: transitionDirection * 64 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: transitionDirection * -64 }}
+                transition={{ duration: reduceMotion ? 0 : 0.75, ease: [0.25, 0.1, 0.25, 1] }}
                 className="absolute inset-0"
               >
                 <AssetMedia asset={currentMedia} autoPlay loop muted={heroMuted} loading="eager" className="absolute inset-0 h-full w-full object-cover" />
@@ -123,31 +129,7 @@ export function HomePage() {
             ) : null}
           </div>
 
-          <div className="mb-6 grid shrink-0 grid-cols-3 items-center gap-2 py-1 sm:mb-10 md:mb-14">
-            <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: reduceMotion ? 0 : 0.8, duration: reduceMotion ? 0 : 0.7 }}
-              className="flex items-center gap-2 sm:gap-3"
-            >
-              {heroMedia.length > 0 ? (
-                <>
-                  <span className="select-none font-mono text-[10px] text-on-media/50 tabular-nums sm:text-xs">
-                    {String(currentIndex + 1).padStart(2, "0")}
-                    <span className="mx-1 text-on-media/25">/</span>
-                    {String(heroMedia.length).padStart(2, "0")}
-                  </span>
-                  <div className="relative hidden h-px max-w-[72px] flex-1 overflow-hidden rounded-full bg-media-control/15 sm:block">
-                    <motion.div
-                      className="home-hero-progress absolute inset-y-0 left-0"
-                      animate={{ width: `${((currentIndex + 1) / heroMedia.length) * 100}%` }}
-                      transition={{ duration: 0.6, ease: "easeInOut" }}
-                    />
-                  </div>
-                </>
-              ) : null}
-            </motion.div>
-
+          <div className="mb-6 flex shrink-0 justify-center py-1 sm:mb-10 md:mb-14">
             <div className="flex justify-center">
               <motion.button
                 type="button"
@@ -164,33 +146,6 @@ export function HomePage() {
               </motion.button>
             </div>
 
-            <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: reduceMotion ? 0 : 0.8, duration: reduceMotion ? 0 : 0.7 }}
-              className="flex items-center justify-end gap-1 sm:gap-2"
-            >
-              {heroMedia.length > 1 ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={previousHero}
-                    aria-label="Previous"
-                    className="btn-press flex h-8 w-8 items-center justify-center rounded-full border border-media-control/15 bg-media-control/5 text-on-media/60 transition-all duration-200 hover:border-media-control/40 hover:bg-media-control/15 hover:text-on-media sm:h-9 sm:w-9"
-                  >
-                    <ArrowLeft className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={nextHero}
-                    aria-label="Next"
-                    className="btn-press flex h-8 w-8 items-center justify-center rounded-full border border-media-control/15 bg-media-control/5 text-on-media/60 transition-all duration-200 hover:border-media-control/40 hover:bg-media-control/15 hover:text-on-media sm:h-9 sm:w-9"
-                  >
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
-                </>
-              ) : null}
-            </motion.div>
           </div>
         </div>
         {currentIsVideo ? (
@@ -206,7 +161,7 @@ export function HomePage() {
         ) : null}
       </section>
 
-      <section className="bg-background py-24">
+      <section id="home-portfolio" className="min-h-screen snap-start snap-always scroll-mt-0 bg-background py-24">
         <div className="container mx-auto max-w-7xl px-4">
           <motion.div
             initial={reduceMotion ? false : { opacity: 0, y: 20 }}
