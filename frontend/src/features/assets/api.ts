@@ -14,6 +14,7 @@ function gallerySearch(query: GalleryQuery) {
   if (query.album) search.set("album", query.album);
   if (query.featured !== undefined) search.set("featured", String(query.featured));
   if (query.homepage) search.set("homepage", "true");
+  if (query.imagesOnly) search.set("images_only", "true");
   if (query.sortByShootTime) search.set("sort_by_shoot_time", query.sortByShootTime);
   return search.toString();
 }

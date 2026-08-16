@@ -43,6 +43,28 @@ func TestRepositoryListsOnlyPublicReadyAssets(t *testing.T) {
 	}
 }
 
+func TestRepositoryCanListOnlyPublicImages(t *testing.T) {
+	repo := newTestRepository(t)
+	ctx := context.Background()
+
+	image := testAsset("public-image", StatusReady)
+	image.Visible = true
+	mustCreate(t, repo, image)
+
+	video := testAsset("public-video", StatusReady)
+	video.Visible = true
+	video.MIMEType = "video/mp4"
+	mustCreate(t, repo, video)
+
+	items, total, err := repo.ListPublic(ctx, PublicFilter{ImagesOnly: true, Page: 1, PageSize: 16})
+	if err != nil {
+		t.Fatalf("ListPublic() error = %v", err)
+	}
+	if total != 1 || len(items) != 1 || items[0].ID != image.ID {
+		t.Fatalf("ListPublic() = %#v total=%d, want only %q", items, total, image.ID)
+	}
+}
+
 func TestRepositoryListsPrivateReadyAssets(t *testing.T) {
 	repo := newTestRepository(t)
 	ctx := context.Background()

@@ -207,20 +207,19 @@ function FilterPanel(props: ThemeGalleryProps) {
 function SingleGallery({ assets, previewSearch = "" }: { assets: Asset[]; previewSearch?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const currentIndexRef = useRef(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const assetKey = useMemo(() => assets.map((asset) => asset.id).join(","), [assets]);
 
   useEffect(() => {
     currentIndexRef.current = 0;
-    containerRef.current?.scrollTo({ top: 0 });
+    setCurrentIndex(0);
   }, [assetKey]);
 
   const navigatePage = useCallback((nextDirection: -1 | 1) => {
-    const container = containerRef.current;
-    if (!container) return;
     const next = Math.max(0, Math.min(assets.length - 1, currentIndexRef.current + nextDirection));
     if (next === currentIndexRef.current) return;
     currentIndexRef.current = next;
-    container.scrollTo({ top: next * container.clientHeight, behavior: "auto" });
+    setCurrentIndex(next);
   }, [assets.length]);
 
   usePagedWheelNavigation(containerRef, navigatePage, assets.length > 1);
@@ -238,10 +237,15 @@ function SingleGallery({ assets, previewSearch = "" }: { assets: Asset[]; previe
   if (!assets.length) return <Empty description="暂无匹配的图片" />;
 
   return (
-    <div ref={containerRef} className="single-gallery-pages mx-auto h-[calc(100dvh-4rem)] w-full max-w-[1280px] snap-y snap-mandatory overflow-y-auto overscroll-y-contain">
-      {assets.map((asset, index) => (
-        <SingleGalleryPage key={asset.id} asset={asset} index={index} total={assets.length} previewSearch={previewSearch} />
-      ))}
+    <div ref={containerRef} className="mx-auto h-[calc(100dvh-4rem)] w-full max-w-[1280px] overflow-hidden overscroll-y-contain">
+      <div
+        className="single-gallery-track flex h-full w-full flex-col will-change-transform"
+        style={{ transform: `translate3d(0, -${currentIndex * 100}%, 0)` }}
+      >
+        {assets.map((asset, index) => (
+          <SingleGalleryPage key={asset.id} asset={asset} index={index} total={assets.length} previewSearch={previewSearch} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -258,7 +262,7 @@ function SingleGalleryPage({ asset, index, total, previewSearch }: { asset: Asse
   ].filter(Boolean);
 
   return (
-    <section className="flex h-full w-full snap-start snap-always items-center justify-center px-2 py-4 sm:px-6 sm:py-6 lg:px-10">
+    <section className="flex h-full w-full shrink-0 items-center justify-center px-2 py-4 sm:px-6 sm:py-6 lg:px-10">
       <figure
         className="flex h-full max-w-full flex-col justify-center"
         style={{ width: `min(100%, min(1100px, calc((100dvh - 12rem) * ${ratio})))` }}

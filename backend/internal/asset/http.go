@@ -326,6 +326,7 @@ func (h *HTTPHandler) listPublic(w http.ResponseWriter, r *http.Request) {
 		Album:         query.Get("album"),
 		ShootTimeSort: SortDirection(query.Get("sort_by_shoot_time")),
 		HomepageOnly:  query.Get("homepage") == "true",
+		ImagesOnly:    query.Get("images_only") == "true",
 		Page:          intQuery(query.Get("page"), 1),
 		PageSize:      intQuery(query.Get("page_size"), 16),
 	}

@@ -76,6 +76,7 @@ type PublicFilter struct {
 	Featured      *bool
 	ShootTimeSort SortDirection
 	HomepageOnly  bool
+	ImagesOnly    bool
 	Page          int
 	PageSize      int
 }

@@ -840,12 +840,14 @@ select {
   box-shadow: 0 2px 16px var(--floating-control-shadow);
 }
 
-.single-gallery-pages {
-  scrollbar-width: none;
+.single-gallery-track {
+  transition: transform 560ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.single-gallery-pages::-webkit-scrollbar {
-  display: none;
+@media (prefers-reduced-motion: reduce) {
+  .single-gallery-track {
+    transition: none;
+  }
 }
 
 .album-asset-order-handle {

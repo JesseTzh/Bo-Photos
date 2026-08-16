@@ -69,6 +69,7 @@ export interface GalleryQuery {
   album?: string;
   featured?: boolean;
   homepage?: boolean;
+  imagesOnly?: boolean;
   private?: boolean;
   sortByShootTime?: "asc" | "desc";
 }

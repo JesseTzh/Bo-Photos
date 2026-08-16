@@ -44,6 +44,7 @@ export function GalleryPage() {
     tags: selectedTags,
     tagsOperator,
     album: resolvedAlbum,
+    imagesOnly: !resolvedAlbum,
     sortByShootTime: sort ?? undefined
   });
 

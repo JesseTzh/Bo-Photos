@@ -161,6 +161,9 @@ func (r *Repository) ListPublic(ctx context.Context, filter PublicFilter) ([]Ass
 	if filter.HomepageOnly {
 		where = append(where, "assets.show_on_homepage = 1")
 	}
+	if filter.ImagesOnly {
+		where = append(where, "assets.mime_type NOT LIKE 'video/%'")
+	}
 	if len(filter.Cameras) > 0 {
 		where = append(where, "assets.camera IN ("+placeholders(len(filter.Cameras))+")")
 		for _, value := range filter.Cameras {

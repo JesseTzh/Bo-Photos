@@ -43,6 +43,7 @@ export function PreviewPage() {
     lenses,
     tags: selectedTags,
     tagsOperator,
+    imagesOnly: !album,
     sortByShootTime: sort ?? undefined
   });
   const privateGallery = usePrivateAssets({ page: 1, pageSize: 200 });
