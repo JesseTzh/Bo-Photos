@@ -15,7 +15,6 @@ interface AdminAssetCardProps {
   onPurge: () => void;
   onToggleVisible: (value: boolean) => void;
   onTogglePrivate: (value: boolean) => void;
-  onToggleFeatured: (value: boolean) => void;
 }
 
 export function AdminAssetCard({
@@ -29,8 +28,7 @@ export function AdminAssetCard({
   onDelete,
   onPurge,
   onToggleVisible,
-  onTogglePrivate,
-  onToggleFeatured
+  onTogglePrivate
 }: AdminAssetCardProps) {
   const hasPreview = Boolean(asset.thumbnail_url || asset.preview_url || asset.video_url);
 
@@ -77,8 +75,6 @@ export function AdminAssetCard({
               <span>公开</span>
               <Switch size="small" checked={asset.private} onChange={onTogglePrivate} />
               <span>隐私</span>
-              <Switch size="small" checked={asset.featured} onChange={onToggleFeatured} />
-              <span>精选</span>
             </Space>
           </Space>
         )}

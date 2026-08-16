@@ -1,7 +1,6 @@
 import { Button, Form, Input, InputNumber, Select, Switch, Typography, message } from "antd";
 import { useEffect, useMemo } from "react";
 import { useAdminAssets } from "../features/assets/admin-api";
-import { isVideoAsset } from "../features/assets/schema";
 import { useAdminSettings, useSaveSettings } from "../features/site/api";
 
 export function AdminSettingsPage() {
@@ -16,22 +15,12 @@ export function AdminSettingsPage() {
   }, [form, settings.data]);
 
   const assetOptions = useMemo(
-    () => (assets.data?.items ?? []).filter((asset) => !isVideoAsset(asset)).map((asset) => ({
+    () => (assets.data?.items ?? []).filter((asset) => !asset.mime_type?.startsWith("video/")).map((asset) => ({
       value: asset.id,
-      label: `${isVideoAsset(asset) ? "[视频]" : "[图片]"} ${asset.title || asset.original_name}`
+      label: `[图片] ${asset.title || asset.original_name}`
     })),
     [assets.data?.items]
   );
-  const heroOptions = useMemo(
-    () => (assets.data?.items ?? [])
-      .filter((asset) => asset.visible && !asset.private)
-      .map((asset) => ({
-        value: asset.id,
-        label: `${isVideoAsset(asset) ? "[视频]" : "[图片]"} ${asset.title || asset.original_name}`
-      })),
-    [assets.data?.items]
-  );
-
   return (
     <div className="admin-page-stack">
       {contextHolder}
@@ -40,18 +29,11 @@ export function AdminSettingsPage() {
         form={form}
         layout="vertical"
         onFinish={async (values) => {
-          await save.mutateAsync(values);
+          if (!settings.data) return;
+          await save.mutateAsync({ ...settings.data, ...values });
           messageApi.success("设置已保存");
         }}
       >
-        <Typography.Title level={4}>序章封面</Typography.Title>
-        <Form.Item name="hero_asset_id" label="封面素材" extra="可选择公开图片或视频；视频进入页面后会静音、循环并自动播放。">
-          <Select allowClear showSearch optionFilterProp="label" options={heroOptions} loading={assets.isPending} />
-        </Form.Item>
-        <Form.Item name="hero_show_text" label="显示封面文字" valuePropName="checked">
-          <Switch />
-        </Form.Item>
-
         <Typography.Title level={4}>站点信息</Typography.Title>
         <Form.Item name="site_title" label="站点标题"><Input /></Form.Item>
         <Form.Item name="site_author" label="作者"><Input /></Form.Item>

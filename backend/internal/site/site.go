@@ -27,7 +27,14 @@ type Settings struct {
 	SiteAuthor             string   `json:"site_author"`
 	SiteFaviconURL         string   `json:"site_favicon_url"`
 	HeroAssetID            string   `json:"hero_asset_id"`
+	HeroCarouselAssetIDs   []string `json:"hero_carousel_asset_ids"`
 	HeroShowText           bool     `json:"hero_show_text"`
+	HeroEyebrow            string   `json:"hero_eyebrow"`
+	HeroKicker             string   `json:"hero_kicker"`
+	HeroTitle              string   `json:"hero_title"`
+	HeroAccentTitle        string   `json:"hero_accent_title"`
+	HeroDescription        string   `json:"hero_description"`
+	HeroVideoOverlay       bool     `json:"hero_video_overlay"`
 	AboutIntro             string   `json:"about_intro"`
 	AboutInstagram         string   `json:"about_social_instagram"`
 	AboutXiaohongshu       string   `json:"about_social_xiaohongshu"`
@@ -46,7 +53,14 @@ type Settings struct {
 }
 
 func Defaults() Settings {
-	return Settings{SiteTitle: "BoPhoto", HeroShowText: true, GalleryLayout: "grid", PublicOriginalDownload: true, AdminImagesPerPage: 20, MaxUploadFiles: 5, PreviewQuality: 80, PreviewMaxWidth: 2560, AnalyticsEnabled: true, AnalyticsRetentionDays: 90, AnalyticsTimezone: "Asia/Shanghai"}
+	return Settings{
+		SiteTitle: "BoPhoto", HeroShowText: true, HeroEyebrow: "Photography",
+		HeroKicker: "Visual Storytelling", HeroTitle: "Every Moment", HeroAccentTitle: "Tells a Story",
+		HeroDescription: "捕捉光影，定格永恒 - 用镜头记录生活的美好瞬间", HeroVideoOverlay: true,
+		GalleryLayout: "grid", PublicOriginalDownload: true, AdminImagesPerPage: 20, MaxUploadFiles: 5,
+		PreviewQuality: 80, PreviewMaxWidth: 2560, AnalyticsEnabled: true, AnalyticsRetentionDays: 90,
+		AnalyticsTimezone: "Asia/Shanghai",
+	}
 }
 
 type Repository struct {
@@ -67,7 +81,6 @@ func (r *Repository) Get(ctx context.Context) (Settings, error) {
 	if err != nil {
 		return s, err
 	}
-	defer rows.Close()
 	m := map[string]string{}
 	for rows.Next() {
 		var k, v string
@@ -75,11 +88,27 @@ func (r *Repository) Get(ctx context.Context) (Settings, error) {
 			m[k] = v
 		}
 	}
+	if err := rows.Err(); err != nil {
+		_ = rows.Close()
+		return s, err
+	}
+	_ = rows.Close()
 	s.SiteTitle = value(m, "site_title", s.SiteTitle)
 	s.SiteAuthor = m["site_author"]
 	s.SiteFaviconURL = m["site_favicon_url"]
 	s.HeroAssetID = m["hero_asset_id"]
+	if raw, ok := m["hero_carousel_asset_ids"]; ok {
+		_ = json.Unmarshal([]byte(raw), &s.HeroCarouselAssetIDs)
+	} else {
+		s.HeroCarouselAssetIDs = r.legacyFeaturedAssetIDs(ctx)
+	}
 	s.HeroShowText = boolValue(m, "hero_show_text", s.HeroShowText)
+	s.HeroEyebrow = configuredValue(m, "hero_eyebrow", s.HeroEyebrow)
+	s.HeroKicker = configuredValue(m, "hero_kicker", s.HeroKicker)
+	s.HeroTitle = configuredValue(m, "hero_title", s.HeroTitle)
+	s.HeroAccentTitle = configuredValue(m, "hero_accent_title", s.HeroAccentTitle)
+	s.HeroDescription = configuredValue(m, "hero_description", s.HeroDescription)
+	s.HeroVideoOverlay = boolValue(m, "hero_video_overlay", s.HeroVideoOverlay)
 	s.AboutIntro = m["about_intro"]
 	s.AboutInstagram = m["about_social_instagram"]
 	s.AboutXiaohongshu = m["about_social_xiaohongshu"]
@@ -95,8 +124,25 @@ func (r *Repository) Get(ctx context.Context) (Settings, error) {
 	s.AnalyticsEnabled = boolValue(m, "analytics_enabled", s.AnalyticsEnabled)
 	s.AnalyticsRetentionDays = intValue(m, "analytics_retention_days", s.AnalyticsRetentionDays)
 	s.AnalyticsTimezone = value(m, "analytics_timezone", s.AnalyticsTimezone)
-	return s, rows.Err()
+	return s, nil
 }
+
+func (r *Repository) legacyFeaturedAssetIDs(ctx context.Context) []string {
+	rows, err := r.db.QueryContext(ctx, `SELECT id FROM assets WHERE status='ready' AND visible=1 AND private=0 AND featured=1 AND deleted_at IS NULL ORDER BY sort,created_at DESC,id LIMIT 5`)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+	ids := make([]string, 0, 5)
+	for rows.Next() {
+		var id string
+		if rows.Scan(&id) == nil {
+			ids = append(ids, id)
+		}
+	}
+	return ids
+}
+
 func (r *Repository) Put(ctx context.Context, s Settings) error {
 	if s.GalleryLayout != "grid" && s.GalleryLayout != "single" {
 		return errors.New("invalid gallery layout")
@@ -108,7 +154,8 @@ func (r *Repository) Put(ctx context.Context, s Settings) error {
 		return errors.New("invalid analytics timezone")
 	}
 	gallery, _ := json.Marshal(s.AboutGalleryAssetIDs)
-	values := map[string]string{"site_title": s.SiteTitle, "site_author": s.SiteAuthor, "site_favicon_url": s.SiteFaviconURL, "hero_asset_id": s.HeroAssetID, "hero_show_text": strconv.FormatBool(s.HeroShowText), "about_intro": s.AboutIntro, "about_social_instagram": s.AboutInstagram, "about_social_xiaohongshu": s.AboutXiaohongshu, "about_social_weibo": s.AboutWeibo, "about_social_github": s.AboutGithub, "about_gallery_asset_ids": string(gallery), "gallery_layout": s.GalleryLayout, "public_original_download": strconv.FormatBool(s.PublicOriginalDownload), "admin_images_per_page": strconv.Itoa(s.AdminImagesPerPage), "max_upload_files": strconv.Itoa(s.MaxUploadFiles), "preview_quality": strconv.Itoa(s.PreviewQuality), "preview_max_width": strconv.Itoa(s.PreviewMaxWidth), "analytics_enabled": strconv.FormatBool(s.AnalyticsEnabled), "analytics_retention_days": strconv.Itoa(s.AnalyticsRetentionDays), "analytics_timezone": s.AnalyticsTimezone}
+	heroCarousel, _ := json.Marshal(s.HeroCarouselAssetIDs)
+	values := map[string]string{"site_title": s.SiteTitle, "site_author": s.SiteAuthor, "site_favicon_url": s.SiteFaviconURL, "hero_asset_id": s.HeroAssetID, "hero_carousel_asset_ids": string(heroCarousel), "hero_show_text": strconv.FormatBool(s.HeroShowText), "hero_eyebrow": s.HeroEyebrow, "hero_kicker": s.HeroKicker, "hero_title": s.HeroTitle, "hero_accent_title": s.HeroAccentTitle, "hero_description": s.HeroDescription, "hero_video_overlay": strconv.FormatBool(s.HeroVideoOverlay), "about_intro": s.AboutIntro, "about_social_instagram": s.AboutInstagram, "about_social_xiaohongshu": s.AboutXiaohongshu, "about_social_weibo": s.AboutWeibo, "about_social_github": s.AboutGithub, "about_gallery_asset_ids": string(gallery), "gallery_layout": s.GalleryLayout, "public_original_download": strconv.FormatBool(s.PublicOriginalDownload), "admin_images_per_page": strconv.Itoa(s.AdminImagesPerPage), "max_upload_files": strconv.Itoa(s.MaxUploadFiles), "preview_quality": strconv.Itoa(s.PreviewQuality), "preview_max_width": strconv.Itoa(s.PreviewMaxWidth), "analytics_enabled": strconv.FormatBool(s.AnalyticsEnabled), "analytics_retention_days": strconv.Itoa(s.AnalyticsRetentionDays), "analytics_timezone": s.AnalyticsTimezone}
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -306,7 +353,7 @@ func (h *Handler) publicSettings(w http.ResponseWriter, r *http.Request) {
 		write(w, 500, err)
 		return
 	}
-	writeJSON(w, 200, map[string]any{"site_title": s.SiteTitle, "site_author": s.SiteAuthor, "site_favicon_url": s.SiteFaviconURL, "hero_asset_id": s.HeroAssetID, "hero_show_text": s.HeroShowText, "about_intro": s.AboutIntro, "about_social_instagram": s.AboutInstagram, "about_social_xiaohongshu": s.AboutXiaohongshu, "about_social_weibo": s.AboutWeibo, "about_social_github": s.AboutGithub, "about_gallery_asset_ids": s.AboutGalleryAssetIDs, "gallery_layout": s.GalleryLayout, "public_original_download": s.PublicOriginalDownload})
+	writeJSON(w, 200, map[string]any{"site_title": s.SiteTitle, "site_author": s.SiteAuthor, "site_favicon_url": s.SiteFaviconURL, "hero_asset_id": s.HeroAssetID, "hero_carousel_asset_ids": s.HeroCarouselAssetIDs, "hero_show_text": s.HeroShowText, "hero_eyebrow": s.HeroEyebrow, "hero_kicker": s.HeroKicker, "hero_title": s.HeroTitle, "hero_accent_title": s.HeroAccentTitle, "hero_description": s.HeroDescription, "hero_video_overlay": s.HeroVideoOverlay, "about_intro": s.AboutIntro, "about_social_instagram": s.AboutInstagram, "about_social_xiaohongshu": s.AboutXiaohongshu, "about_social_weibo": s.AboutWeibo, "about_social_github": s.AboutGithub, "about_gallery_asset_ids": s.AboutGalleryAssetIDs, "gallery_layout": s.GalleryLayout, "public_original_download": s.PublicOriginalDownload})
 }
 func (h *Handler) adminSettings(w http.ResponseWriter, r *http.Request) {
 	s, e := h.repo.Get(r.Context())
@@ -380,6 +427,12 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 func value(m map[string]string, k, d string) string {
 	if m[k] != "" {
 		return m[k]
+	}
+	return d
+}
+func configuredValue(m map[string]string, k, d string) string {
+	if v, ok := m[k]; ok {
+		return v
 	}
 	return d
 }

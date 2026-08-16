@@ -15,7 +15,6 @@ interface AdminAssetListRowProps {
   onPurge: () => void;
   onToggleVisible: (value: boolean) => void;
   onTogglePrivate: (value: boolean) => void;
-  onToggleFeatured: (value: boolean) => void;
 }
 
 export function AdminAssetListRow({
@@ -29,8 +28,7 @@ export function AdminAssetListRow({
   onDelete,
   onPurge,
   onToggleVisible,
-  onTogglePrivate,
-  onToggleFeatured
+  onTogglePrivate
 }: AdminAssetListRowProps) {
   const hasPreview = Boolean(asset.thumbnail_url || asset.preview_url || asset.video_url);
 
@@ -56,7 +54,6 @@ export function AdminAssetListRow({
           {asset.private ? <Tag className="privacy-status-tag">隐私</Tag> : null}
           <Switch size="small" checked={asset.visible} onChange={onToggleVisible} />
           <Switch size="small" checked={asset.private} onChange={onTogglePrivate} />
-          <Switch size="small" checked={asset.featured} onChange={onToggleFeatured} />
           <Tooltip title="查看"><Button icon={<EyeOutlined />} onClick={onView} /></Tooltip>
           <Tooltip title="编辑"><Button icon={<EditOutlined />} onClick={onEdit} /></Tooltip>
           {(asset.status === "failed" || asset.status === "ready") && !isVideoAsset(asset) ? <Tooltip title="重试"><Button icon={<ReloadOutlined />} onClick={onRetry} /></Tooltip> : null}

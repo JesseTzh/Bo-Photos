@@ -23,7 +23,7 @@ func TestSettingsDefaultsAndHashedVisitLogging(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !settings.AnalyticsEnabled || settings.AnalyticsRetentionDays != 90 || !settings.PublicOriginalDownload || !settings.HeroShowText {
+	if !settings.AnalyticsEnabled || settings.AnalyticsRetentionDays != 90 || !settings.PublicOriginalDownload || !settings.HeroShowText || !settings.HeroVideoOverlay || settings.HeroTitle != "Every Moment" {
 		t.Fatalf("defaults = %#v", settings)
 	}
 	if err := repo.Log(context.Background(), "/", "home", "203.0.113.1", "test", ""); err != nil {
@@ -37,8 +37,20 @@ func TestSettingsDefaultsAndHashedVisitLogging(t *testing.T) {
 		t.Fatalf("ip_hash = %q", hash)
 	}
 	settings.AnalyticsEnabled = false
+	settings.HeroAssetID = "hero-asset"
+	settings.HeroCarouselAssetIDs = []string{"carousel-1", "carousel-2"}
+	settings.HeroTitle = "自定义标题"
+	settings.HeroDescription = ""
+	settings.HeroVideoOverlay = false
 	if err := repo.Put(context.Background(), settings); err != nil {
 		t.Fatal(err)
+	}
+	saved, err := repo.Get(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if saved.HeroAssetID != "hero-asset" || len(saved.HeroCarouselAssetIDs) != 2 || saved.HeroTitle != "自定义标题" || saved.HeroDescription != "" || saved.HeroVideoOverlay {
+		t.Fatalf("saved home settings = %#v", saved)
 	}
 	if err := repo.Log(context.Background(), "/", "home", "203.0.113.2", "test", ""); err != nil {
 		t.Fatal(err)

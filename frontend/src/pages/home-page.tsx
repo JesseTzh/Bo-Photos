@@ -1,12 +1,12 @@
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useAlbums } from "../features/albums/api";
 import { albumPublicHref } from "../features/albums/routes";
-import { useAsset, useGallery } from "../features/assets/api";
 import { AssetMedia } from "../features/assets/asset-media";
+import { isVideoAsset } from "../features/assets/schema";
 import { PublicNav } from "../features/site/public-nav";
-import { usePublicSettings, useVisit } from "../features/site/api";
+import { useHomeAssets, usePublicSettings, useVisit } from "../features/site/api";
 import { AppLink } from "../shared/adapters/link";
 import { useAppRouter } from "../shared/adapters/navigation";
 
@@ -14,36 +14,44 @@ export function HomePage() {
   useVisit("home");
   const router = useAppRouter();
   const reduceMotion = useReducedMotion();
-  const gallery = useGallery({ page: 1, pageSize: 8, featured: true });
   const albums = useAlbums();
   const settings = usePublicSettings();
-  const configuredHero = useAsset(settings.data?.hero_asset_id, Boolean(settings.data?.hero_asset_id));
-  const heroImages = useMemo(
-    () => gallery.data?.items.filter((item) => item.preview_url || item.thumbnail_url).slice(0, 5) ?? [],
-    [gallery.data?.items]
-  );
+  const homeAssetIds = useMemo(() => {
+    const ids = [settings.data?.hero_asset_id, ...(settings.data?.hero_carousel_asset_ids ?? [])].filter((id): id is string => Boolean(id));
+    return [...new Set(ids)];
+  }, [settings.data?.hero_asset_id, settings.data?.hero_carousel_asset_ids]);
+  const homeAssets = useHomeAssets(homeAssetIds);
+  const heroMedia = useMemo(() => {
+    const byId = new Map((homeAssets.data ?? []).map((asset) => [asset.id, asset]));
+    return homeAssetIds.map((id) => byId.get(id)).filter((asset): asset is NonNullable<typeof asset> => Boolean(asset));
+  }, [homeAssetIds, homeAssets.data]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const currentImage = heroImages[currentIndex];
-  const currentMedia = configuredHero.data ?? currentImage;
-  const hasConfiguredHero = Boolean(configuredHero.data);
+  const [heroMuted, setHeroMuted] = useState(true);
+  const currentMedia = heroMedia[currentIndex];
   const showHeroText = settings.data?.hero_show_text !== false;
+  const currentIsVideo = Boolean(currentMedia && isVideoAsset(currentMedia));
+  const showMediaOverlay = !currentIsVideo || settings.data?.hero_video_overlay !== false;
 
   useEffect(() => {
-    if (heroImages.length < 2) return;
+    if (heroMedia.length < 2) return;
     const timer = window.setInterval(() => {
-      setCurrentIndex((value) => (value + 1) % heroImages.length);
+      setCurrentIndex((value) => (value + 1) % heroMedia.length);
     }, 5000);
     return () => window.clearInterval(timer);
-  }, [heroImages.length]);
+  }, [heroMedia.length]);
+
+  useEffect(() => {
+    if (currentIndex >= heroMedia.length) setCurrentIndex(0);
+  }, [currentIndex, heroMedia.length]);
 
   function nextHero() {
-    if (!heroImages.length) return;
-    setCurrentIndex((value) => (value + 1) % heroImages.length);
+    if (!heroMedia.length) return;
+    setCurrentIndex((value) => (value + 1) % heroMedia.length);
   }
 
   function previousHero() {
-    if (!heroImages.length) return;
-    setCurrentIndex((value) => (value - 1 + heroImages.length) % heroImages.length);
+    if (!heroMedia.length) return;
+    setCurrentIndex((value) => (value - 1 + heroMedia.length) % heroMedia.length);
   }
 
   return (
@@ -62,9 +70,9 @@ export function HomePage() {
                 transition={{ duration: reduceMotion ? 0 : 1.8, ease: [0.25, 0.1, 0.25, 1] }}
                 className="absolute inset-0"
               >
-                <AssetMedia asset={currentMedia} autoPlay loop muted loading="eager" className="absolute inset-0 h-full w-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-media-scrim/80 via-media-scrim/30 to-media-scrim/20" />
-                <div className="home-hero-vignette absolute inset-0" />
+                <AssetMedia asset={currentMedia} autoPlay loop muted={heroMuted} loading="eager" className="absolute inset-0 h-full w-full object-cover" />
+                {showMediaOverlay ? <div className="absolute inset-0 bg-gradient-to-t from-media-scrim/80 via-media-scrim/30 to-media-scrim/20" /> : null}
+                {showMediaOverlay ? <div className="home-hero-vignette absolute inset-0" /> : null}
               </motion.div>
             ) : (
               <div className="home-hero-fallback absolute inset-0" />
@@ -87,7 +95,7 @@ export function HomePage() {
                 transition={{ delay: reduceMotion ? 0 : 0.2, duration: reduceMotion ? 0 : 0.8 }}
                 className="text-xs font-light uppercase tracking-[0.25em] text-on-media/80"
               >
-                Photography
+                {settings.data?.hero_eyebrow ?? "Photography"}
               </motion.span>
             ) : null}
           </div>
@@ -100,16 +108,16 @@ export function HomePage() {
                 transition={{ delay: reduceMotion ? 0 : 0.5, duration: reduceMotion ? 0 : 1, ease: "easeOut" }}
               >
                 <p className="mb-2 text-[10px] uppercase tracking-[0.35em] text-on-media/50 sm:mb-3 sm:text-xs">
-                  Visual Storytelling
+                  {settings.data?.hero_kicker ?? "Visual Storytelling"}
                 </p>
                 <h1 className="mb-3 text-4xl font-light leading-[1.1] text-on-media sm:mb-4 sm:text-5xl md:text-6xl lg:text-7xl">
-                  <span className="block">Every Moment</span>
+                  <span className="block">{settings.data?.hero_title ?? "Every Moment"}</span>
                   <span className="home-hero-accent-text block bg-clip-text text-transparent">
-                    Tells a Story
+                    {settings.data?.hero_accent_title ?? "Tells a Story"}
                   </span>
                 </h1>
                 <p className="mx-auto max-w-[260px] text-xs font-light leading-relaxed text-on-media/60 sm:max-w-sm sm:text-sm">
-                  捕捉光影，定格永恒 - 用镜头记录生活的美好瞬间
+                  {settings.data?.hero_description ?? "捕捉光影，定格永恒 - 用镜头记录生活的美好瞬间"}
                 </p>
               </motion.div>
             ) : null}
@@ -122,17 +130,17 @@ export function HomePage() {
               transition={{ delay: reduceMotion ? 0 : 0.8, duration: reduceMotion ? 0 : 0.7 }}
               className="flex items-center gap-2 sm:gap-3"
             >
-              {!hasConfiguredHero && heroImages.length > 0 ? (
+              {heroMedia.length > 0 ? (
                 <>
                   <span className="select-none font-mono text-[10px] text-on-media/50 tabular-nums sm:text-xs">
                     {String(currentIndex + 1).padStart(2, "0")}
                     <span className="mx-1 text-on-media/25">/</span>
-                    {String(heroImages.length).padStart(2, "0")}
+                    {String(heroMedia.length).padStart(2, "0")}
                   </span>
                   <div className="relative hidden h-px max-w-[72px] flex-1 overflow-hidden rounded-full bg-media-control/15 sm:block">
                     <motion.div
                       className="home-hero-progress absolute inset-y-0 left-0"
-                      animate={{ width: `${((currentIndex + 1) / heroImages.length) * 100}%` }}
+                      animate={{ width: `${((currentIndex + 1) / heroMedia.length) * 100}%` }}
                       transition={{ duration: 0.6, ease: "easeInOut" }}
                     />
                   </div>
@@ -162,7 +170,7 @@ export function HomePage() {
               transition={{ delay: reduceMotion ? 0 : 0.8, duration: reduceMotion ? 0 : 0.7 }}
               className="flex items-center justify-end gap-1 sm:gap-2"
             >
-              {!hasConfiguredHero && heroImages.length > 0 ? (
+              {heroMedia.length > 1 ? (
                 <>
                   <button
                     type="button"
@@ -185,6 +193,17 @@ export function HomePage() {
             </motion.div>
           </div>
         </div>
+        {currentIsVideo ? (
+          <button
+            type="button"
+            className="home-hero-sound btn-press"
+            aria-label={heroMuted ? "开启声音" : "静音"}
+            title={heroMuted ? "开启声音" : "静音"}
+            onClick={() => setHeroMuted((value) => !value)}
+          >
+            {heroMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          </button>
+        ) : null}
       </section>
 
       <section className="bg-background py-24">

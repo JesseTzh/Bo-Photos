@@ -3,6 +3,7 @@ import {
   CameraOutlined,
   DashboardOutlined,
   FolderOpenOutlined,
+  HomeOutlined,
   LogoutOutlined,
   PictureOutlined,
   SettingOutlined,
@@ -17,6 +18,7 @@ import { useTheme } from "../shared/adapters/theme";
 
 const navigation = [
   { key: "dashboard", icon: <DashboardOutlined />, label: "仪表盘" },
+  { key: "home", icon: <HomeOutlined />, label: "首页管理" },
   { key: "images", icon: <PictureOutlined />, label: "图片" },
   { key: "albums", icon: <FolderOpenOutlined />, label: "相册" },
   { key: "tags", icon: <TagsOutlined />, label: "标签" },

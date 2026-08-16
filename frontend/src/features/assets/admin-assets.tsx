@@ -43,7 +43,6 @@ export function AdminAssets({ refreshToken = 0 }: AdminAssetsProps) {
     status: appliedFilters.status,
     visible: appliedFilters.visible,
     private: appliedFilters.private,
-    featured: appliedFilters.featured,
     camera: appliedFilters.camera,
     lens: appliedFilters.lens,
     exposure_time: appliedFilters.exposure_time,
@@ -85,7 +84,7 @@ export function AdminAssets({ refreshToken = 0 }: AdminAssetsProps) {
     messageApi.success("图片已彻底删除");
   }
 
-  async function toggleAsset(asset: Asset, input: Pick<Asset, "visible"> | Pick<Asset, "private"> | Pick<Asset, "featured">) {
+  async function toggleAsset(asset: Asset, input: Pick<Asset, "visible"> | Pick<Asset, "private">) {
     await update.mutateAsync({ id: asset.id, input });
   }
 
@@ -139,7 +138,6 @@ export function AdminAssets({ refreshToken = 0 }: AdminAssetsProps) {
               onPurge={() => void purgeItem(item.id)}
               onToggleVisible={(visible) => void toggleAsset(item, { visible })}
               onTogglePrivate={(privateValue) => void toggleAsset(item, { private: privateValue })}
-              onToggleFeatured={(featured) => void toggleAsset(item, { featured })}
             />
           ))}
         </div>
@@ -159,7 +157,6 @@ export function AdminAssets({ refreshToken = 0 }: AdminAssetsProps) {
               onPurge={() => void purgeItem(item.id)}
               onToggleVisible={(visible) => void toggleAsset(item, { visible })}
               onTogglePrivate={(privateValue) => void toggleAsset(item, { private: privateValue })}
-              onToggleFeatured={(featured) => void toggleAsset(item, { featured })}
             />
           ))}
         </div>

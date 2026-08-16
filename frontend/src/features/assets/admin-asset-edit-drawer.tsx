@@ -77,7 +77,6 @@ export function AdminAssetEditDrawer({ asset, open, onClose, onSaved }: AdminAss
             <Form.Item name="visible" label="公开" valuePropName="checked"><Switch /></Form.Item>
             <Form.Item name="private" label="隐私" valuePropName="checked"><Switch /></Form.Item>
             <Form.Item name="show_on_homepage" label="首页显示" valuePropName="checked"><Switch /></Form.Item>
-            <Form.Item name="featured" label="精选" valuePropName="checked"><Switch /></Form.Item>
             <Form.Item name="sort" label="排序"><InputNumber /></Form.Item>
           </Space>
           {boundAlbums.length && !isVideoAsset(asset) ? (
@@ -155,7 +154,6 @@ function toAssetInput(values: Record<string, unknown>): AssetUpdate {
     visible: values.visible as boolean | undefined,
     private: values.private as boolean | undefined,
     show_on_homepage: values.show_on_homepage as boolean | undefined,
-    featured: values.featured as boolean | undefined,
     sort: numberValue(values.sort)
   };
 }

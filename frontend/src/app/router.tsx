@@ -18,6 +18,7 @@ import { AdminSettingsPage } from "../pages/admin-settings-page";
 import { AdminAnalyticsPage } from "../pages/admin-analytics-page";
 import { AdminAccountPage } from "../pages/admin-account-page";
 import { PrivateAlbumPage } from "../pages/private-album-page";
+import { AdminHomePage } from "../pages/admin-home-page";
 
 export const router = createBrowserRouter([
   {
@@ -78,6 +79,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <AdminDashboardPage /> },
+      { path: "home", element: <AdminHomePage /> },
       { path: "images", element: <AdminAssetsPage /> },
       { path: "albums", element: <AdminAlbumsPage /> },
       { path: "albums/new", element: <AdminAlbumEditPage /> },

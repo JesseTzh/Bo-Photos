@@ -12,7 +12,6 @@ export interface UploadMetadataDraft {
   visible: boolean;
   private: boolean;
   show_on_homepage: boolean;
-  featured: boolean;
   sort: number;
   shoot_at?: string;
   camera?: string;
@@ -46,7 +45,6 @@ export const defaultUploadMetadata: UploadMetadataDraft = {
   visible: true,
   private: false,
   show_on_homepage: true,
-  featured: false,
   sort: 0
 };
 

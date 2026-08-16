@@ -102,7 +102,6 @@ export function UploadPanel({ onAssetReady }: UploadPanelProps) {
                 <Form.Item name="visible" label="公开" valuePropName="checked"><Switch /></Form.Item>
                 <Form.Item name="private" label="隐私" valuePropName="checked"><Switch /></Form.Item>
                 <Form.Item name="show_on_homepage" label="首页显示" valuePropName="checked"><Switch /></Form.Item>
-                <Form.Item name="featured" label="精选" valuePropName="checked"><Switch /></Form.Item>
                 <Form.Item name="sort" label="排序"><InputNumber /></Form.Item>
               </Space>
             </Form>
@@ -169,7 +168,6 @@ export function UploadPanel({ onAssetReady }: UploadPanelProps) {
             <Form.Item name="visible" label="公开" valuePropName="checked"><Switch /></Form.Item>
             <Form.Item name="private" label="隐私" valuePropName="checked"><Switch /></Form.Item>
             <Form.Item name="show_on_homepage" label="首页显示" valuePropName="checked"><Switch /></Form.Item>
-            <Form.Item name="featured" label="精选" valuePropName="checked"><Switch /></Form.Item>
             <Form.Item name="sort" label="排序"><InputNumber /></Form.Item>
           </Space>
           <div className="upload-editor-grid">
@@ -239,7 +237,6 @@ function normalizeUploadDefaults(values: Partial<UploadMetadataDraft>): UploadMe
     visible: values.visible ?? true,
     private: values.private ?? false,
     show_on_homepage: values.show_on_homepage ?? true,
-    featured: values.featured ?? false,
     sort: values.sort ?? 0,
     shoot_at: emptyToUndefined(values.shoot_at),
     camera: emptyToUndefined(values.camera),
@@ -261,7 +258,6 @@ function toAssetUpdate(metadata: UploadMetadataDraft): AssetUpdate {
     visible: metadata.visible,
     private: metadata.private,
     show_on_homepage: metadata.show_on_homepage,
-    featured: metadata.featured,
     sort: metadata.sort,
     shoot_at: metadata.shoot_at,
     camera: metadata.camera,

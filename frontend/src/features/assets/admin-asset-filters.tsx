@@ -12,7 +12,6 @@ export interface AdminAssetFilterState {
   status?: AssetStatus;
   visible?: boolean;
   private?: boolean;
-  featured?: boolean;
   camera?: string;
   lens?: string;
   exposure_time?: string;
@@ -55,7 +54,6 @@ export function AdminAssetFilters({ value, onChange, onApply, onReset }: AdminAs
       <Select allowClear placeholder="状态" value={value.status} options={statuses.map((status) => ({ value: status, label: status }))} onChange={(status) => patch({ status })} />
       <Select allowClear placeholder="公开" value={value.visible} options={[{ value: true, label: "公开" }, { value: false, label: "隐藏" }]} onChange={(visible) => patch({ visible })} />
       <Select allowClear placeholder="隐私" value={value.private} options={[{ value: true, label: "隐私" }, { value: false, label: "非隐私" }]} onChange={(privateValue) => patch({ private: privateValue })} />
-      <Select allowClear placeholder="精选" value={value.featured} options={[{ value: true, label: "精选" }, { value: false, label: "非精选" }]} onChange={(featured) => patch({ featured })} />
       <Select allowClear showSearch placeholder="相机" value={value.camera} options={(options.data?.cameras ?? []).map((item) => ({ value: item, label: item }))} onChange={(camera) => patch({ camera })} />
       <Select allowClear showSearch placeholder="镜头" value={value.lens} options={(options.data?.lenses ?? []).map((item) => ({ value: item, label: item }))} onChange={(lens) => patch({ lens })} />
       <Select allowClear showSearch placeholder="快门" value={value.exposure_time} options={(options.data?.exposure_times ?? []).map((item) => ({ value: item, label: item }))} onChange={(exposure_time) => patch({ exposure_time })} />
