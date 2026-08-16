@@ -164,6 +164,7 @@ select {
 }
 
 .auth-shell {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -184,7 +185,11 @@ select {
 }
 
 .auth-version {
-  margin: 1rem 0 0;
+  position: absolute;
+  right: 0;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  left: 0;
+  margin: 0;
   color: var(--muted-foreground);
   font-family: var(--font-mono);
   font-size: 0.72rem;
@@ -833,6 +838,14 @@ select {
 
 .gallery-floating-control {
   box-shadow: 0 2px 16px var(--floating-control-shadow);
+}
+
+.single-gallery-pages {
+  scrollbar-width: none;
+}
+
+.single-gallery-pages::-webkit-scrollbar {
+  display: none;
 }
 
 .album-asset-order-handle {

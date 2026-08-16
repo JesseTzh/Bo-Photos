@@ -6,13 +6,25 @@ import { fileURLToPath, URL } from "node:url";
 
 function createBuildVersion() {
   const now = new Date();
-  const pad = (value: number) => String(value).padStart(2, "0");
+  const dateParts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Shanghai",
+      year: "2-digit",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23"
+    })
+      .formatToParts(now)
+      .map(({ type, value }) => [type, value])
+  );
   const timestamp = [
-    pad(now.getFullYear() % 100),
-    pad(now.getMonth() + 1),
-    pad(now.getDate()),
-    pad(now.getHours()),
-    pad(now.getMinutes())
+    dateParts.year,
+    dateParts.month,
+    dateParts.day,
+    dateParts.hour,
+    dateParts.minute
   ].join("-");
 
   let gitSha = process.env.BOPHOTOS_GIT_SHA?.trim().slice(0, 7) || "";

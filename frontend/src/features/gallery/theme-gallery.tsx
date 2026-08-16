@@ -1,10 +1,11 @@
 import { Check, LayoutGrid, Rows, Settings2, SlidersHorizontal, X, ArrowUpDown } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Empty, Pagination, Spin } from "antd";
 import type { Asset, AssetPage } from "../assets/schema";
 import { AssetMedia } from "../assets/asset-media";
 import { AppLink } from "../../shared/adapters/link";
 import { cn } from "../../shared/lib/utils";
+import { usePagedWheelNavigation } from "../../shared/hooks/use-paged-wheel-navigation";
 import { VirtualWaterfallGallery } from "./virtual-waterfall-gallery";
 
 interface FabItem {
@@ -204,22 +205,89 @@ function FilterPanel(props: ThemeGalleryProps) {
 }
 
 function SingleGallery({ assets, previewSearch = "" }: { assets: Asset[]; previewSearch?: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const currentIndexRef = useRef(0);
+  const assetKey = useMemo(() => assets.map((asset) => asset.id).join(","), [assets]);
+
+  useEffect(() => {
+    currentIndexRef.current = 0;
+    containerRef.current?.scrollTo({ top: 0 });
+  }, [assetKey]);
+
+  const navigatePage = useCallback((nextDirection: -1 | 1) => {
+    const container = containerRef.current;
+    if (!container) return;
+    const next = Math.max(0, Math.min(assets.length - 1, currentIndexRef.current + nextDirection));
+    if (next === currentIndexRef.current) return;
+    currentIndexRef.current = next;
+    container.scrollTo({ top: next * container.clientHeight, behavior: "auto" });
+  }, [assets.length]);
+
+  usePagedWheelNavigation(containerRef, navigatePage, assets.length > 1);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+      if (event.key === "ArrowUp") navigatePage(-1);
+      if (event.key === "ArrowDown") navigatePage(1);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigatePage]);
+
   if (!assets.length) return <Empty description="暂无匹配的图片" />;
+
   return (
-    <div className="mx-auto w-full max-w-[900px] space-y-4 px-3 pb-16 sm:px-4 md:px-6">
-      {assets.map((asset) => (
-        <AppLink key={asset.id} href={`/preview/${asset.id}${previewSearch}`} className="group block overflow-hidden rounded-xl bg-muted">
-          <AssetMedia
-            asset={asset}
-            className="h-auto w-full object-cover transition-opacity duration-300 group-hover:opacity-95"
-          />
-          <div className="border-x border-b border-border bg-card px-4 py-3">
-            <h3 className="truncate text-sm font-medium text-card-foreground">{asset.title || asset.original_name}</h3>
-            <p className="mt-1 truncate text-xs text-muted-foreground">{[asset.camera, asset.lens].filter(Boolean).join(" · ")}</p>
-          </div>
-        </AppLink>
+    <div ref={containerRef} className="single-gallery-pages mx-auto h-[calc(100dvh-4rem)] w-full max-w-[1280px] snap-y snap-mandatory overflow-y-auto overscroll-y-contain">
+      {assets.map((asset, index) => (
+        <SingleGalleryPage key={asset.id} asset={asset} index={index} total={assets.length} previewSearch={previewSearch} />
       ))}
     </div>
+  );
+}
+
+function SingleGalleryPage({ asset, index, total, previewSearch }: { asset: Asset; index: number; total: number; previewSearch: string }) {
+  const ratio = asset.width > 0 && asset.height > 0 ? asset.width / asset.height : 4 / 3;
+  const details = [
+    asset.camera,
+    asset.lens,
+    asset.shoot_at ? new Date(asset.shoot_at).toLocaleDateString("zh-CN") : undefined,
+    asset.aperture,
+    asset.exposure_time,
+    asset.iso ? `ISO ${asset.iso}` : undefined
+  ].filter(Boolean);
+
+  return (
+    <section className="flex h-full w-full snap-start snap-always items-center justify-center px-2 py-4 sm:px-6 sm:py-6 lg:px-10">
+      <figure
+        className="flex h-full max-w-full flex-col justify-center"
+        style={{ width: `min(100%, min(1100px, calc((100dvh - 12rem) * ${ratio})))` }}
+      >
+        <AppLink
+          href={`/preview/${asset.id}${previewSearch}`}
+          className="group flex w-full items-center justify-center overflow-hidden rounded-md bg-muted/30"
+          style={{ aspectRatio: ratio }}
+        >
+          <AssetMedia
+            asset={asset}
+            loading={index < 2 ? "eager" : "lazy"}
+            className="block h-full w-full object-contain transition-opacity duration-300 group-hover:opacity-95"
+          />
+        </AppLink>
+        <figcaption className="mt-3 rounded-md border border-border bg-card px-4 py-3 shadow-sm sm:px-5 sm:py-4">
+          <div className="flex min-w-0 items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h3 className="truncate text-sm font-medium text-card-foreground sm:text-base">{asset.title || asset.original_name}</h3>
+              {asset.description ? <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{asset.description}</p> : null}
+            </div>
+            <span className="shrink-0 font-mono text-[10px] text-muted-foreground tabular-nums sm:text-xs">
+              {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
+            </span>
+          </div>
+          {details.length ? <p className="mt-2 truncate text-xs text-muted-foreground">{details.join(" · ")}</p> : null}
+        </figcaption>
+      </figure>
+    </section>
   );
 }
 
@@ -299,7 +367,7 @@ export function ThemeGallery(props: ThemeGalleryProps) {
       ];
 
   return (
-    <div className="min-h-screen bg-background px-3 pt-16 pb-16">
+    <div className={cn("bg-background px-3 pt-16", currentStyle === "single" ? "h-[100dvh] overflow-hidden" : "min-h-screen pb-16")}>
       {props.loading ? (
         <div className="flex min-h-[60vh] items-center justify-center">
           <Spin />
