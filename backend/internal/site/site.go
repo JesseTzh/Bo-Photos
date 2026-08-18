@@ -68,7 +68,11 @@ type Repository struct {
 	now func() time.Time
 }
 
-func NewRepository(db *sql.DB) *Repository { return &Repository{db: db, now: time.Now} }
+func NewRepository(db *sql.DB) *Repository {
+	// Keep this feature compatible with installations whose migration history ends at v7.
+	_, _ = db.Exec(`CREATE TABLE IF NOT EXISTS annual_summaries (year INTEGER NOT NULL, slot INTEGER NOT NULL CHECK (slot >= 0 AND slot < 10), asset_id TEXT REFERENCES assets(id) ON DELETE SET NULL, comment TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY (year, slot))`)
+	return &Repository{db: db, now: time.Now}
+}
 func (r *Repository) currentTime() time.Time {
 	if r.now == nil {
 		return time.Now()
@@ -333,11 +337,97 @@ type Handler struct {
 	dataDir string
 }
 
+type AnnualSummarySlot struct {
+	Slot    int    `json:"slot"`
+	AssetID string `json:"asset_id,omitempty"`
+	Comment string `json:"comment"`
+}
+
+type AnnualSummary struct {
+	Year  int                 `json:"year"`
+	Slots []AnnualSummarySlot `json:"slots"`
+}
+
+func (r *Repository) AnnualYears(ctx context.Context) ([]int, error) {
+	rows, err := r.db.QueryContext(ctx, `SELECT DISTINCT year FROM annual_summaries ORDER BY year DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	result := []int{}
+	for rows.Next() {
+		var year int
+		if err := rows.Scan(&year); err != nil {
+			return nil, err
+		}
+		result = append(result, year)
+	}
+	return result, rows.Err()
+}
+
+func (r *Repository) AnnualSummary(ctx context.Context, year int) (AnnualSummary, error) {
+	result := AnnualSummary{Year: year, Slots: make([]AnnualSummarySlot, 10)}
+	for i := range result.Slots {
+		result.Slots[i].Slot = i
+	}
+	rows, err := r.db.QueryContext(ctx, `SELECT slot,COALESCE(asset_id,''),comment FROM annual_summaries WHERE year=? ORDER BY slot`, year)
+	if err != nil {
+		return result, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var slot AnnualSummarySlot
+		if err := rows.Scan(&slot.Slot, &slot.AssetID, &slot.Comment); err != nil {
+			return result, err
+		}
+		if slot.Slot >= 0 && slot.Slot < 10 {
+			result.Slots[slot.Slot] = slot
+		}
+	}
+	return result, rows.Err()
+}
+
+func (r *Repository) SaveAnnualSummary(ctx context.Context, summary AnnualSummary) error {
+	if summary.Year < 1900 || summary.Year > 2200 || len(summary.Slots) != 10 {
+		return errors.New("年度总结必须包含有效年份和十张照片")
+	}
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	now := r.currentTime().UTC().Format(time.RFC3339Nano)
+	for i, slot := range summary.Slots {
+		if slot.Slot != i {
+			slot.Slot = i
+		}
+		if _, err := tx.ExecContext(ctx, `INSERT INTO annual_summaries(year,slot,asset_id,comment,created_at,updated_at) VALUES(?,?,?,?,?,?) ON CONFLICT(year,slot) DO UPDATE SET asset_id=excluded.asset_id,comment=excluded.comment,updated_at=excluded.updated_at`, summary.Year, i, nullableString(slot.AssetID), slot.Comment, now, now); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+func nullableString(value string) any {
+	if strings.TrimSpace(value) == "" {
+		return nil
+	}
+	return value
+}
+func intQuery(value string, fallback int) int {
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed < 1 {
+		return fallback
+	}
+	return parsed
+}
+
 func NewHandler(repo *Repository, dataDir string) *Handler {
 	return &Handler{repo: repo, dataDir: dataDir}
 }
 func (h *Handler) RegisterPublic(r chi.Router) {
 	r.Get("/settings", h.publicSettings)
+	r.Get("/annual-summary", h.publicAnnualSummary)
 	r.Post("/visits", h.visit)
 }
 func (h *Handler) RegisterAdmin(r chi.Router) {
@@ -346,6 +436,48 @@ func (h *Handler) RegisterAdmin(r chi.Router) {
 	r.Get("/settings", h.adminSettings)
 	r.Put("/settings", h.updateSettings)
 	r.Get("/disk", h.disk)
+	r.Get("/annual-summary", h.adminAnnualSummary)
+	r.Put("/annual-summary", h.saveAnnualSummary)
+}
+func (h *Handler) publicAnnualSummary(w http.ResponseWriter, r *http.Request) {
+	year := intQuery(r.URL.Query().Get("year"), time.Now().Year())
+	summary, err := h.repo.AnnualSummary(r.Context(), year)
+	if err != nil {
+		write(w, 500, err)
+		return
+	}
+	years, err := h.repo.AnnualYears(r.Context())
+	if err != nil {
+		write(w, 500, err)
+		return
+	}
+	writeJSON(w, 200, map[string]any{"year": summary.Year, "years": years, "slots": summary.Slots})
+}
+func (h *Handler) adminAnnualSummary(w http.ResponseWriter, r *http.Request) {
+	year := intQuery(r.URL.Query().Get("year"), time.Now().Year())
+	summary, err := h.repo.AnnualSummary(r.Context(), year)
+	if err != nil {
+		write(w, 500, err)
+		return
+	}
+	years, err := h.repo.AnnualYears(r.Context())
+	if err != nil {
+		write(w, 500, err)
+		return
+	}
+	writeJSON(w, 200, map[string]any{"year": summary.Year, "years": years, "slots": summary.Slots})
+}
+func (h *Handler) saveAnnualSummary(w http.ResponseWriter, r *http.Request) {
+	var summary AnnualSummary
+	if json.NewDecoder(r.Body).Decode(&summary) != nil {
+		write(w, 400, errors.New("invalid annual summary"))
+		return
+	}
+	if err := h.repo.SaveAnnualSummary(r.Context(), summary); err != nil {
+		write(w, 422, err)
+		return
+	}
+	writeJSON(w, 200, nil)
 }
 func (h *Handler) publicSettings(w http.ResponseWriter, r *http.Request) {
 	s, err := h.repo.Get(r.Context())

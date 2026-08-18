@@ -19,6 +19,8 @@ import { AdminAnalyticsPage } from "../pages/admin-analytics-page";
 import { AdminAccountPage } from "../pages/admin-account-page";
 import { PrivateAlbumPage } from "../pages/private-album-page";
 import { AdminHomePage } from "../pages/admin-home-page";
+import { AnnualSummaryPage } from "../pages/annual-summary-page";
+import { AdminAnnualSummaryPage } from "../pages/admin-annual-summary-page";
 
 export const router = createBrowserRouter([
   {
@@ -42,6 +44,7 @@ export const router = createBrowserRouter([
     element: <CoversPage />
   },
   { path: "/about", element: <AboutPage /> },
+  { path: "/annual-summary", element: <AnnualSummaryPage /> },
   {
     path: "/preview/:id",
     element: <PreviewPage />
@@ -80,6 +83,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <AdminDashboardPage /> },
       { path: "home", element: <AdminHomePage /> },
+      { path: "annual-summary", element: <AdminAnnualSummaryPage /> },
       { path: "images", element: <AdminAssetsPage /> },
       { path: "albums", element: <AdminAlbumsPage /> },
       { path: "albums/new", element: <AdminAlbumEditPage /> },

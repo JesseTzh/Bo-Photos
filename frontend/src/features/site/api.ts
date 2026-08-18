@@ -8,10 +8,15 @@ export interface CountPoint{date:string;count:number}
 export interface NamedCount{name:string;count:number}
 export interface Dashboard{ImagesTotal:number;ImagesPublic:number;AlbumsTotal:number;VisitsTotal:number;VisitsToday:number;VisitsYesterday:number;CamerasTotal:number;LensesTotal:number;last_7_days:CountPoint[];TopCameras:NamedCount[];TopLenses:NamedCount[];PhotosByYear:NamedCount[]}
 export interface Analytics{dashboard:Dashboard;unique_visitors:number;hourly:CountPoint[];sources:NamedCount[];pages:NamedCount[]}
+export interface AnnualSummarySlot{slot:number;asset_id?:string;comment:string}
+export interface AnnualSummary{year:number;years:number[];slots:AnnualSummarySlot[]}
 export function usePublicSettings(){return useQuery({queryKey:["settings","public"],queryFn:()=>apiRequest<Partial<SiteSettings>>("/public/settings")})}
 export function useAdminSettings(){return useQuery({queryKey:["settings","admin"],queryFn:()=>apiRequest<SiteSettings>("/admin/settings")})}
 export function useSaveSettings(){const c=useQueryClient();return useMutation({mutationFn:(s:SiteSettings)=>apiRequest<void>("/admin/settings",{method:"PUT",body:JSON.stringify(s)}),onSuccess:()=>c.invalidateQueries({queryKey:["settings"]})})}
 export function useHomeAssets(ids:string[]){return useQuery({queryKey:["assets","home",ids],queryFn:async()=>{const items=await Promise.all(ids.map((id)=>apiRequest<Asset>(`/public/assets/${id}`).catch(()=>undefined)));return items.filter((item):item is Asset=>Boolean(item))},enabled:ids.length>0})}
+export function useAnnualSummary(year?:number){return useQuery({queryKey:["annual-summary",year],queryFn:()=>apiRequest<AnnualSummary>(`/public/annual-summary?year=${year}`),enabled:Boolean(year)})}
+export function useAdminAnnualSummary(year?:number){return useQuery({queryKey:["annual-summary","admin",year],queryFn:()=>apiRequest<AnnualSummary>(`/admin/annual-summary?year=${year}`),enabled:Boolean(year)})}
+export function useSaveAnnualSummary(){const c=useQueryClient();return useMutation({mutationFn:(summary:AnnualSummary)=>apiRequest<void>("/admin/annual-summary",{method:"PUT",body:JSON.stringify(summary)}),onSuccess:()=>c.invalidateQueries({queryKey:["annual-summary"]})})}
 export function useDashboard(){return useQuery({queryKey:["dashboard"],queryFn:()=>apiRequest<Dashboard>("/admin/dashboard")})}
 export function useAnalytics(){return useQuery({queryKey:["analytics"],queryFn:()=>apiRequest<Analytics>("/admin/analytics")})}
 export function useDisk(){return useQuery({queryKey:["disk"],queryFn:()=>apiRequest<{total:number;free:number;used:number}>("/admin/disk")})}

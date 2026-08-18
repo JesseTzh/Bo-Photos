@@ -14,7 +14,8 @@ const navLinks = [
   { name: "序章", href: "/" },
   { name: "城隅寻迹", href: "/covers" },
   { name: "景行集", href: "/gallery" },
-  { name: "关于我", href: "/about" }
+  { name: "关于我", href: "/about" },
+  { name: "年度总结", href: "/annual-summary" }
 ];
 
 function albumHref(album: Album) {
