@@ -67,25 +67,36 @@ export function AdminAssets({ refreshToken = 0 }: AdminAssetsProps) {
     });
   }
 
+  async function runAction(action: Promise<unknown>, success?: string) {
+    try {
+      await action;
+      if (success) messageApi.success(success);
+      return true;
+    } catch (error) {
+      messageApi.error(error instanceof Error ? error.message : "操作失败");
+      return false;
+    }
+  }
+
   async function deleteItems(ids: string[]) {
     if (!ids.length) return;
-    await remove.mutateAsync(ids);
-    setSelected(new Set());
-    messageApi.success("图片已删除");
+    if (await runAction(remove.mutateAsync(ids), "图片已删除")) {
+      setSelected(new Set());
+    }
   }
 
   async function purgeItem(id: string) {
-    await purge.mutateAsync(id);
-    setSelected((current) => {
-      const next = new Set(current);
-      next.delete(id);
-      return next;
-    });
-    messageApi.success("图片已彻底删除");
+    if (await runAction(purge.mutateAsync(id), "图片已彻底删除")) {
+      setSelected((current) => {
+        const next = new Set(current);
+        next.delete(id);
+        return next;
+      });
+    }
   }
 
   async function toggleAsset(asset: Asset, input: Pick<Asset, "visible"> | Pick<Asset, "private">) {
-    await update.mutateAsync({ id: asset.id, input });
+    await runAction(update.mutateAsync({ id: asset.id, input }));
   }
 
   return (
@@ -132,8 +143,8 @@ export function AdminAssets({ refreshToken = 0 }: AdminAssetsProps) {
               onSelect={(checked) => setItemSelected(item.id, checked)}
               onView={() => setViewing(item)}
               onEdit={() => setEditing(item)}
-              onRetry={() => void retry.mutateAsync(item.id)}
-              onRestore={() => void restore.mutateAsync(item.id)}
+              onRetry={() => void runAction(retry.mutateAsync(item.id))}
+              onRestore={() => void runAction(restore.mutateAsync(item.id))}
               onDelete={() => void deleteItems([item.id])}
               onPurge={() => void purgeItem(item.id)}
               onToggleVisible={(visible) => void toggleAsset(item, { visible })}
@@ -151,8 +162,8 @@ export function AdminAssets({ refreshToken = 0 }: AdminAssetsProps) {
               onSelect={(checked) => setItemSelected(item.id, checked)}
               onView={() => setViewing(item)}
               onEdit={() => setEditing(item)}
-              onRetry={() => void retry.mutateAsync(item.id)}
-              onRestore={() => void restore.mutateAsync(item.id)}
+              onRetry={() => void runAction(retry.mutateAsync(item.id))}
+              onRestore={() => void runAction(restore.mutateAsync(item.id))}
               onDelete={() => void deleteItems([item.id])}
               onPurge={() => void purgeItem(item.id)}
               onToggleVisible={(visible) => void toggleAsset(item, { visible })}

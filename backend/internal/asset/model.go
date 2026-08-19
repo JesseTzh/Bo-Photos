@@ -148,11 +148,11 @@ type UpdateInput struct {
 func CanTransition(from, to Status) bool {
 	switch from {
 	case StatusProcessing:
-		return to == StatusReady || to == StatusFailed
+		return to == StatusReady || to == StatusFailed || to == StatusDeleted
 	case StatusReady:
 		return to == StatusProcessing || to == StatusDeleted
 	case StatusFailed:
-		return to == StatusProcessing
+		return to == StatusProcessing || to == StatusDeleted
 	case StatusDeleted:
 		return to == StatusReady || to == StatusPurged
 	default:

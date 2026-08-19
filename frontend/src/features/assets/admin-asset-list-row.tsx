@@ -71,7 +71,7 @@ export function AdminAssetListRow({
                 <Tooltip title="彻底删除"><Button danger icon={<DeleteOutlined />} /></Tooltip>
               </Popconfirm>
             </>
-          ) : <Tooltip title="删除"><Button danger icon={<DeleteOutlined />} onClick={onDelete} /></Tooltip>}
+          ) : asset.status !== "purged" ? <Tooltip title="删除"><Button danger icon={<DeleteOutlined />} onClick={onDelete} /></Tooltip> : null}
         </Space>
       </div>
     </div>

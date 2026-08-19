@@ -73,9 +73,13 @@ export function UploadPanel({ onAssetReady }: UploadPanelProps) {
 
   async function deleteUploadedDuplicate(item: UploadQueueItem) {
     if (!item.assetId) return;
-    await deleteAssets.mutateAsync([item.assetId]);
-    queue.update(item.key, { status: "deleted" });
-    messageApi.success("本次上传已删除");
+    try {
+      await deleteAssets.mutateAsync([item.assetId]);
+      queue.update(item.key, { status: "deleted" });
+      messageApi.success("本次上传已删除");
+    } catch (error) {
+      messageApi.error(error instanceof Error ? error.message : "删除失败");
+    }
   }
 
   return (

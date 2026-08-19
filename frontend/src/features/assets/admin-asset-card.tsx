@@ -62,7 +62,9 @@ export function AdminAssetCard({
                 <Tooltip title="彻底删除"><Button type="text" danger icon={<DeleteOutlined />} /></Tooltip>
               </Popconfirm>
             </Space>
-          : <Tooltip title="删除" key="delete"><Button type="text" danger icon={<DeleteOutlined />} onClick={onDelete} /></Tooltip>
+          : asset.status === "purged"
+            ? <span key="delete" />
+            : <Tooltip title="删除" key="delete"><Button type="text" danger icon={<DeleteOutlined />} onClick={onDelete} /></Tooltip>
       ]}
     >
       <Card.Meta

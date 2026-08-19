@@ -241,6 +241,13 @@ func (s *Service) Retry(ctx context.Context, id string) error {
 }
 
 func (s *Service) Delete(ctx context.Context, id string) error {
+	item, err := s.repository.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	if item.Status == StatusDeleted || item.Status == StatusPurged {
+		return nil
+	}
 	return s.repository.Transition(ctx, id, StatusDeleted, "")
 }
 

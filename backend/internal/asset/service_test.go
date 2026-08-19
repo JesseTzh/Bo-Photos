@@ -228,6 +228,48 @@ func TestServiceRetryIncrementsDerivativeVersion(t *testing.T) {
 	}
 }
 
+func TestServiceDeleteAllowsFailedAndProcessing(t *testing.T) {
+	service, repo, _, _ := newTestAssetService(t, imageproc.Metadata{}, nil)
+	ctx := context.Background()
+
+	failed, err := service.Upload(ctx, "failed.jpg", bytes.NewReader(append([]byte{0xff, 0xd8, 0xff, 0xe0}, []byte("failed")...)))
+	if err != nil {
+		t.Fatalf("Upload(failed) error = %v", err)
+	}
+	if err := repo.Transition(ctx, failed.Asset.ID, StatusFailed, "ASSET_PROCESSING_FAILED"); err != nil {
+		t.Fatalf("Transition(failed) error = %v", err)
+	}
+	if err := service.Delete(ctx, failed.Asset.ID); err != nil {
+		t.Fatalf("Delete(failed) error = %v", err)
+	}
+	stored, err := repo.Get(ctx, failed.Asset.ID)
+	if err != nil {
+		t.Fatalf("Get(failed) error = %v", err)
+	}
+	if stored.Status != StatusDeleted || stored.DeletedAt == nil {
+		t.Fatalf("failed after delete = %#v", stored)
+	}
+
+	processing, err := service.Upload(ctx, "processing.jpg", bytes.NewReader(append([]byte{0xff, 0xd8, 0xff, 0xe0}, []byte("processing")...)))
+	if err != nil {
+		t.Fatalf("Upload(processing) error = %v", err)
+	}
+	if err := service.Delete(ctx, processing.Asset.ID); err != nil {
+		t.Fatalf("Delete(processing) error = %v", err)
+	}
+	stored, err = repo.Get(ctx, processing.Asset.ID)
+	if err != nil {
+		t.Fatalf("Get(processing) error = %v", err)
+	}
+	if stored.Status != StatusDeleted {
+		t.Fatalf("processing after delete status = %q, want deleted", stored.Status)
+	}
+
+	if err := service.Delete(ctx, stored.ID); err != nil {
+		t.Fatalf("Delete(already deleted) error = %v", err)
+	}
+}
+
 func TestServicePurgeDeletesFilesAndMarksPurged(t *testing.T) {
 	service, repo, local, _ := newTestAssetService(t, imageproc.Metadata{}, nil)
 	upload, err := service.Upload(

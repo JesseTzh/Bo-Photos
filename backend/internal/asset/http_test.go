@@ -163,6 +163,35 @@ func TestAdminUpdateMapsSnakeCaseFields(t *testing.T) {
 	}
 }
 
+func TestAdminBatchDeleteFailedAndProcessingAssets(t *testing.T) {
+	handler, repo, _ := newTestAssetHTTP(t)
+	failed := testAsset("delete-failed", StatusFailed)
+	processing := testAsset("delete-processing", StatusProcessing)
+	mustCreate(t, repo, failed)
+	mustCreate(t, repo, processing)
+
+	request := httptest.NewRequest(
+		http.MethodDelete,
+		"/admin/assets",
+		bytes.NewBufferString(`{"ids":["delete-failed","delete-processing"]}`),
+	)
+	request.Header.Set("Content-Type", "application/json")
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d body=%s", response.Code, response.Body.String())
+	}
+	for _, id := range []string{failed.ID, processing.ID} {
+		updated, err := repo.Get(context.Background(), id)
+		if err != nil {
+			t.Fatalf("Get(%s) error = %v", id, err)
+		}
+		if updated.Status != StatusDeleted {
+			t.Fatalf("status(%s) = %q, want deleted", id, updated.Status)
+		}
+	}
+}
+
 func TestAdminPurgeDeletedAsset(t *testing.T) {
 	handler, repo, local := newTestAssetHTTP(t)
 	item := testAsset("purge-api", StatusDeleted)
