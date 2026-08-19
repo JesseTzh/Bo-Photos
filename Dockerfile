@@ -29,7 +29,7 @@ RUN apt-get update \
         ca-certificates \
         libheif1 \
         libimage-exiftool-perl \
-        libraw20 \
+        libraw-bin \
         libvips42 \
         libvips-tools \
         tzdata \

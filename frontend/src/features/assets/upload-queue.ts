@@ -2,6 +2,34 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchAdminAsset, uploadAsset } from "./admin-api";
 import type { AssetStatus } from "./schema";
 
+const RAW_EXTENSIONS = new Set([".arw", ".nef", ".cr2", ".cr3", ".raf", ".dng", ".orf", ".rw2", ".pef"]);
+
+export const RAW_UPLOAD_ACCEPT = [
+  "image/*",
+  ".arw", ".ARW",
+  ".nef", ".NEF",
+  ".cr2", ".CR2",
+  ".cr3", ".CR3",
+  ".raf", ".RAF",
+  ".dng", ".DNG",
+  ".orf", ".ORF",
+  ".rw2", ".RW2",
+  ".pef", ".PEF",
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+  ".mov"
+].join(",");
+
+export function isRawUploadFile(file: Pick<File, "name">): boolean {
+  return RAW_EXTENSIONS.has(fileExtension(file.name));
+}
+
+function fileExtension(name: string): string {
+  const index = name.lastIndexOf(".");
+  return index >= 0 ? name.slice(index).toLowerCase() : "";
+}
+
 export type UploadQueueStatus = "queued" | "uploading" | AssetStatus;
 
 export interface UploadMetadataDraft {
@@ -159,8 +187,8 @@ export function useUploadQueue(
 
   const addFiles = useCallback((files: File[], metadataDefaults = defaultsRef.current) => {
     const queued = files.map((file, index): UploadQueueItem => {
-      const previewUrl = URL.createObjectURL(file);
-      previewUrls.current.add(previewUrl);
+      const previewUrl = isRawUploadFile(file) ? "" : URL.createObjectURL(file);
+      if (previewUrl) previewUrls.current.add(previewUrl);
       return {
         key: `${file.name}-${file.size}-${file.lastModified}-${Date.now()}-${index}`,
         file,
@@ -182,6 +210,7 @@ export function useUploadQueue(
       current
         .filter((item) => ["ready", "failed"].includes(item.status))
         .forEach((item) => {
+          if (!item.previewUrl) return;
           URL.revokeObjectURL(item.previewUrl);
           previewUrls.current.delete(item.previewUrl);
         });

@@ -1,11 +1,18 @@
 package imageproc
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"log/slog"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -16,6 +23,7 @@ type Runner interface {
 type Commands struct {
 	VIPSThumbnail string
 	ExifTool      string
+	LibRaw        []string
 }
 
 type Limits struct {
@@ -41,6 +49,9 @@ func NewCommandProcessor(runner Runner, commands Commands, limits Limits) *Comma
 	if commands.ExifTool == "" {
 		commands.ExifTool = "exiftool"
 	}
+	if len(commands.LibRaw) == 0 {
+		commands.LibRaw = []string{"simple_dcraw", "dcraw_emu"}
+	}
 	if limits.PreviewMaxWidth == 0 {
 		limits.PreviewMaxWidth = 2560
 	}
@@ -57,14 +68,75 @@ func NewCommandProcessor(runner Runner, commands Commands, limits Limits) *Comma
 }
 
 func (p *CommandProcessor) Process(ctx context.Context, request Request) (Metadata, error) {
+	started := time.Now()
 	ctx, cancel := context.WithTimeout(ctx, p.limits.Timeout)
 	defer cancel()
 
+	sourcePath := request.OriginalPath
+	previewSource := "original"
+	if request.Family == FormatRAW {
+		decoded, method, cleanup, err := p.decodeRAW(ctx, request.OriginalPath)
+		if cleanup != nil {
+			defer cleanup()
+		}
+		if err != nil {
+			slog.Error("asset preview failed",
+				"asset_id", request.AssetID,
+				"kind", request.Kind,
+				"error", err,
+				"duration_ms", time.Since(started).Milliseconds(),
+			)
+			return Metadata{}, fmt.Errorf("generate preview: %w", err)
+		}
+		sourcePath = decoded
+		previewSource = method
+	}
+
+	if err := p.generateDerivatives(ctx, sourcePath, request); err != nil {
+		slog.Error("asset preview failed",
+			"asset_id", request.AssetID,
+			"kind", request.Kind,
+			"preview_path", previewSource,
+			"error", err,
+			"duration_ms", time.Since(started).Milliseconds(),
+		)
+		return Metadata{}, err
+	}
+
+	slog.Info("asset preview generated",
+		"asset_id", request.AssetID,
+		"kind", request.Kind,
+		"preview_path", previewSource,
+		"duration_ms", time.Since(started).Milliseconds(),
+	)
+
+	output, err := p.runner.Run(ctx, p.commands.ExifTool, "-json", "-n", request.OriginalPath)
+	if err != nil {
+		slog.Warn("asset EXIF extraction failed",
+			"asset_id", request.AssetID,
+			"kind", request.Kind,
+			"error", err,
+		)
+		return Metadata{}, nil
+	}
+	metadata, err := parseExif(output)
+	if err != nil {
+		slog.Warn("asset EXIF extraction failed",
+			"asset_id", request.AssetID,
+			"kind", request.Kind,
+			"error", err,
+		)
+		return Metadata{}, nil
+	}
+	return metadata, nil
+}
+
+func (p *CommandProcessor) generateDerivatives(ctx context.Context, source string, request Request) error {
 	previewOutput := fmt.Sprintf("%s[Q=%d,strip]", request.PreviewPath, p.limits.PreviewQuality)
 	if _, err := p.runner.Run(
 		ctx,
 		p.commands.VIPSThumbnail,
-		request.OriginalPath,
+		source,
 		"--size",
 		fmt.Sprintf("%dx%d>", p.limits.PreviewMaxWidth, p.limits.PreviewMaxWidth),
 		"--rotate",
@@ -73,14 +145,14 @@ func (p *CommandProcessor) Process(ctx context.Context, request Request) (Metada
 		"--output",
 		previewOutput,
 	); err != nil {
-		return Metadata{}, fmt.Errorf("generate preview: %w", err)
+		return fmt.Errorf("generate preview: %w", err)
 	}
 
 	thumbnailOutput := request.ThumbnailPath + "[Q=80,strip]"
 	if _, err := p.runner.Run(
 		ctx,
 		p.commands.VIPSThumbnail,
-		request.OriginalPath,
+		source,
 		"--size",
 		fmt.Sprintf("%dx%d>", p.limits.ThumbnailSize, p.limits.ThumbnailSize),
 		"--rotate",
@@ -89,20 +161,125 @@ func (p *CommandProcessor) Process(ctx context.Context, request Request) (Metada
 		"--output",
 		thumbnailOutput,
 	); err != nil {
-		return Metadata{}, fmt.Errorf("generate thumbnail: %w", err)
+		return fmt.Errorf("generate thumbnail: %w", err)
+	}
+	return nil
+}
+
+func (p *CommandProcessor) decodeRAW(ctx context.Context, originalPath string) (string, string, func(), error) {
+	workDir, err := os.MkdirTemp("", "bophotos-raw-*")
+	if err != nil {
+		return "", "", nil, fmt.Errorf("create raw work dir: %w", err)
+	}
+	cleanup := func() { _ = os.RemoveAll(workDir) }
+
+	workFile := filepath.Join(workDir, filepath.Base(originalPath))
+	if err := copyFile(originalPath, workFile); err != nil {
+		cleanup()
+		return "", "", nil, fmt.Errorf("stage raw original: %w", err)
 	}
 
-	output, err := p.runner.Run(ctx, p.commands.ExifTool, "-json", "-n", request.OriginalPath)
-	if err != nil {
-		return Metadata{}, fmt.Errorf("extract EXIF: %w", err)
+	for _, name := range p.commands.LibRaw {
+		if _, err := p.runner.Run(ctx, name, "-T", workFile); isNotFound(err) {
+			continue
+		} else if err != nil {
+			continue
+		}
+		if decoded := firstExistingFile(librawOutputs(workFile)); decoded != "" {
+			return decoded, "libraw", cleanup, nil
+		}
 	}
-	return parseExif(output)
+
+	for _, tag := range []string{"PreviewImage", "JpgFromRaw", "OtherImage"} {
+		data, err := p.runner.Run(ctx, p.commands.ExifTool, "-b", "-"+tag, originalPath)
+		if err != nil || !isJPEG(data) {
+			continue
+		}
+		jpegPath := filepath.Join(workDir, "embedded.jpg")
+		if err := os.WriteFile(jpegPath, data, 0o600); err != nil {
+			continue
+		}
+		return jpegPath, "embedded_jpeg", cleanup, nil
+	}
+
+	cleanup()
+	return "", "", nil, errors.New("libraw and embedded jpeg preview failed")
+}
+
+func librawOutputs(input string) []string {
+	ext := filepath.Ext(input)
+	base := strings.TrimSuffix(input, ext)
+	return []string{
+		input + ".tiff",
+		input + ".tif",
+		base + ".tiff",
+		base + ".tif",
+		input + ".ppm",
+		base + ".ppm",
+	}
+}
+
+func firstExistingFile(paths []string) string {
+	for _, path := range paths {
+		info, err := os.Stat(path)
+		if err == nil && info.Size() > 0 {
+			return path
+		}
+	}
+	return ""
+}
+
+func copyFile(source, target string) error {
+	in, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+	out, err := os.OpenFile(target, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(out, in); err != nil {
+		_ = out.Close()
+		_ = os.Remove(target)
+		return err
+	}
+	if err := out.Close(); err != nil {
+		_ = os.Remove(target)
+		return err
+	}
+	return nil
+}
+
+func isJPEG(data []byte) bool {
+	return len(data) >= 3 && data[0] == 0xff && data[1] == 0xd8 && data[2] == 0xff
+}
+
+func isNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, exec.ErrNotFound) {
+		return true
+	}
+	var execErr *exec.Error
+	return errors.As(err, &execErr) && errors.Is(execErr.Err, exec.ErrNotFound)
 }
 
 type ExecRunner struct{}
 
 func (ExecRunner) Run(ctx context.Context, name string, args ...string) ([]byte, error) {
-	return exec.CommandContext(ctx, name, args...).CombinedOutput()
+	cmd := exec.CommandContext(ctx, name, args...)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		if stderr.Len() > 0 {
+			return stdout.Bytes(), fmt.Errorf("%s: %w: %s", name, err, strings.TrimSpace(stderr.String()))
+		}
+		return stdout.Bytes(), fmt.Errorf("%s: %w", name, err)
+	}
+	return stdout.Bytes(), nil
 }
 
 type exifRecord struct {

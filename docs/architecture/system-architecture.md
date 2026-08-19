@@ -16,7 +16,7 @@ flowchart TB
     SQLite["SQLite\n<dataDir>/app.db"]
     Storage["本地文件\noriginals/previews/thumbnails/staging/trash"]
     Jobs["图片处理队列\n2 workers / 64 queue"]
-    Tools["vipsthumbnail + exiftool"]
+    Tools["LibRaw CLI + vipsthumbnail + exiftool"]
     Cleanup["后台清理\n图片 + 访问日志"]
 
     Browser --> Go
@@ -61,7 +61,7 @@ frontend 构建产物 -> Go 静态托管 + REST API -> /data 中的 SQLite 和�
 - alexedwards/scs SQLite Session。
 - Argon2id 密码哈希。
 - 本地文件存储。
-- vipsthumbnail 和 exiftool 图片处理。
+- vipsthumbnail、exiftool，以及 RAW 全尺寸解码用的 LibRaw CLI（`simple_dcraw` / `dcraw_emu`）。
 
 部署：
 
@@ -164,11 +164,12 @@ OpenAPI 文件位于 `backend/openapi/openapi.yaml`，统一前缀为 `/api/v1`�
 
 1. 文件先写入 `staging/<assetID>.upload`。
 2. 计算 SHA-256，并检查上传大小。
-3. 识别格式后移动到 `originals/<assetID>.<ext>`。
-4. 创建处理任务，生成 WebP 预览图和缩略图。
-5. 提取 EXIF，更新图片为 `ready` 状态。
+3. `DetectMedia` 用魔数和 TIFF IFD0/SubIFD 识别格式（相机 RAW 保留 `.arw` 等原生后缀和具体 MIME），再移动到 `originals/<assetID>.<ext>`。
+4. 创建处理任务。常规图直接 `vipsthumbnail` 原片。RAW 禁止对原片跑 `vipsthumbnail`：先拷到工作目录，用 `simple_dcraw -T`（或 `dcraw_emu -T`）解出临时 TIFF/PPM，再对临时文件出 WebP；CLI 不存在或失败则用 `exiftool` 抽 `PreviewImage` / `JpgFromRaw` / `OtherImage`。
+5. 预览成功后再跑 `exiftool -json -n`。EXIF 失败只打日志，不阻止 `ready`。
+6. 浏览器始终只显示生成的 WebP；队列里的 RAW 用占位，不在前端解码。
 
-图片处理队列当前为 2 个 worker，队列长度 64。队列不可用或处理失败时，图片会进入失败状态。
+图片处理队列当前为 2 个 worker，队列长度 64。队列不可用或预览两条路径都失败时，图片会进入失败状态（`ASSET_PROCESSING_FAILED`）。运行时不在 `/health/ready` 里强依赖 LibRaw。
 
 ## Session 和权限
 

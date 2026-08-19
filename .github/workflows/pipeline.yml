@@ -65,6 +65,44 @@ jobs:
       - name: Build application image
         run: docker build --build-arg BOPHOTOS_GIT_SHA="${GITHUB_SHA}" --tag bophotos-ci:local .
 
+      - name: Decode test.ARW inside production image
+        run: |
+          set -euo pipefail
+          test -f test.ARW
+          docker run --rm \
+            --volume "$PWD/test.ARW:/fixture/test.ARW:ro" \
+            --entrypoint bash \
+            bophotos-ci:local \
+            -lc '
+              set -euo pipefail
+              filetype=$(exiftool -s3 -FileType /fixture/test.ARW)
+              test "$filetype" = "ARW"
+              model=$(exiftool -s3 -Model /fixture/test.ARW)
+              test "$model" = "ILCE-6400"
+              command -v simple_dcraw >/dev/null || command -v dcraw_emu >/dev/null
+              cp /fixture/test.ARW /tmp/test.ARW
+              if command -v simple_dcraw >/dev/null; then
+                simple_dcraw -T /tmp/test.ARW
+              else
+                dcraw_emu -T /tmp/test.ARW
+              fi
+              decoded=$(ls /tmp/test.ARW.tiff /tmp/test.ARW.tif /tmp/test.tiff /tmp/test.ARW.ppm 2>/dev/null | head -n 1)
+              test -n "$decoded"
+              test -s "$decoded"
+              header=$(vipsheader "$decoded")
+              echo "$header"
+              width=$(echo "$header" | sed -n "s/^\([^:]*\): \([0-9]*\)x.*/\2/p")
+              test "$width" -ge 6000
+              vipsthumbnail "$decoded" \
+                --size 480x480\> \
+                --rotate \
+                --export-profile srgb \
+                --output /tmp/raw-ci.webp[Q=80,strip]
+              test -s /tmp/raw-ci.webp
+              hexdump -C -n 12 /tmp/raw-ci.webp | grep -q "RIFF"
+              hexdump -C -s 8 -n 4 /tmp/raw-ci.webp | grep -q "WEBP"
+            '
+
       - name: Verify startup and restart
         run: |
           set -euo pipefail

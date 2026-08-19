@@ -6,7 +6,7 @@ import { useAdminSettings } from "../site/api";
 import { flattenTags, useSaveAssetTags, useTags } from "../tags/api";
 import { type AssetUpdate, useDeleteAssets, useSaveAssetAlbums, useUpdateAsset } from "./admin-api";
 import { readReferenceExif } from "./exif";
-import { defaultUploadMetadata, type UploadMetadataDraft, type UploadQueueItem, useUploadQueue } from "./upload-queue";
+import { defaultUploadMetadata, isRawUploadFile, RAW_UPLOAD_ACCEPT, type UploadMetadataDraft, type UploadQueueItem, useUploadQueue } from "./upload-queue";
 
 interface UploadPanelProps {
   onAssetReady?: () => void;
@@ -111,7 +111,7 @@ export function UploadPanel({ onAssetReady }: UploadPanelProps) {
       <Upload.Dragger
         className="asset-upload-dragger"
         multiple
-        accept="image/*,video/mp4,video/webm,video/quicktime,.mov"
+        accept={RAW_UPLOAD_ACCEPT}
         showUploadList={false}
         beforeUpload={(file) => {
           if (activeCount >= maxUploadFiles) {
@@ -123,7 +123,7 @@ export function UploadPanel({ onAssetReady }: UploadPanelProps) {
         }}
       >
         <p className="ant-upload-drag-icon"><InboxOutlined /></p>
-        <p className="ant-upload-text">拖入图片或视频，或点击选择多个文件</p>
+        <p className="ant-upload-text">拖入图片、RAW 或视频，或点击选择多个文件</p>
       </Upload.Dragger>
       {queue.items.length ? (
         <>
@@ -139,6 +139,8 @@ export function UploadPanel({ onAssetReady }: UploadPanelProps) {
                 <List.Item.Meta
                   avatar={item.file.type.startsWith("video/") ? (
                     <video src={item.previewUrl} className="upload-preview" width={64} height={64} muted />
+                  ) : isRawUploadFile(item.file) ? (
+                    <div className="upload-preview upload-preview-raw" aria-hidden>RAW</div>
                   ) : <Image src={item.previewUrl} alt={item.file.name} className="upload-preview" width={64} height={64} />}
                   title={<Space wrap><span>{item.file.name}</span><Button size="small" icon={<EditOutlined />} onClick={() => setEditingKey(item.key)}>信息</Button></Space>}
                   description={<UploadItemDescription item={item} onCopy={copyDuplicateIds} onDelete={deleteUploadedDuplicate} />}

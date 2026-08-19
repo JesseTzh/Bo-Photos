@@ -508,6 +508,17 @@ select {
   object-fit: cover;
 }
 
+.upload-preview-raw {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
 .album-asset-order {
   display: grid;
   gap: 0.5rem;

@@ -3,9 +3,11 @@ package asset
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/besscroft/bophotos/backend/internal/imageproc"
@@ -35,6 +37,29 @@ func TestServiceUploadCreatesProcessingAssetAndDuplicateWarning(t *testing.T) {
 	}
 	if _, err := repo.Get(context.Background(), second.Asset.ID); err != nil {
 		t.Fatalf("Get(second) error = %v", err)
+	}
+}
+
+func TestServiceUploadARWKeepsNativeExtensionAndMIME(t *testing.T) {
+	service, _, _, queue := newTestAssetService(t, imageproc.Metadata{}, nil)
+	compression := uint16(32767)
+	content := miniTIFFLE("SONY", &compression, nil)
+
+	upload, err := service.Upload(context.Background(), "DSC00001.ARW", bytes.NewReader(content))
+	if err != nil {
+		t.Fatalf("Upload() error = %v", err)
+	}
+	if !strings.HasSuffix(upload.Asset.OriginalKey, ".arw") {
+		t.Fatalf("OriginalKey = %q, want .arw", upload.Asset.OriginalKey)
+	}
+	if upload.Asset.MIMEType != "image/x-sony-arw" {
+		t.Fatalf("MIMEType = %q, want image/x-sony-arw", upload.Asset.MIMEType)
+	}
+	if upload.Asset.Status != StatusProcessing {
+		t.Fatalf("Status = %q, want processing", upload.Asset.Status)
+	}
+	if len(queue.ids) != 1 {
+		t.Fatalf("queued IDs = %#v, want 1", queue.ids)
 	}
 }
 
@@ -292,6 +317,48 @@ func (p fakeProcessor) Process(_ context.Context, request imageproc.Request) (im
 		}
 	}
 	return p.metadata, nil
+}
+
+func miniTIFFLE(makeName string, compression *uint16, dngVersion []byte) []byte {
+	type field struct {
+		tag   uint16
+		typ   uint16
+		count uint32
+		data  []byte
+	}
+	var fields []field
+	if compression != nil {
+		data := make([]byte, 2)
+		binary.LittleEndian.PutUint16(data, *compression)
+		fields = append(fields, field{tag: 0x0103, typ: 3, count: 1, data: data})
+	}
+	if makeName != "" {
+		data := append([]byte(makeName), 0)
+		fields = append(fields, field{tag: 0x010F, typ: 2, count: uint32(len(data)), data: data})
+	}
+	if len(dngVersion) > 0 {
+		fields = append(fields, field{tag: 0xC612, typ: 1, count: uint32(len(dngVersion)), data: dngVersion})
+	}
+	buf := bytes.NewBuffer([]byte{'I', 'I', 42, 0, 8, 0, 0, 0})
+	_ = binary.Write(buf, binary.LittleEndian, uint16(len(fields)))
+	extra := &bytes.Buffer{}
+	dataOffset := 8 + 2 + 12*len(fields) + 4
+	for _, field := range fields {
+		_ = binary.Write(buf, binary.LittleEndian, field.tag)
+		_ = binary.Write(buf, binary.LittleEndian, field.typ)
+		_ = binary.Write(buf, binary.LittleEndian, field.count)
+		value := make([]byte, 4)
+		if len(field.data) <= 4 {
+			copy(value, field.data)
+		} else {
+			binary.LittleEndian.PutUint32(value, uint32(dataOffset+extra.Len()))
+			extra.Write(field.data)
+		}
+		buf.Write(value)
+	}
+	buf.Write(make([]byte, 4))
+	buf.Write(extra.Bytes())
+	return buf.Bytes()
 }
 
 func newTestAssetService(

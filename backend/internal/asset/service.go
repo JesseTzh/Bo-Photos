@@ -69,9 +69,9 @@ func (s *Service) Upload(ctx context.Context, originalName string, source io.Rea
 	if err != nil {
 		return UploadResult{}, err
 	}
-	format, detectErr := imageproc.DetectFormat(stagingFile)
+	detection, detectErr := imageproc.DetectMedia(stagingFile)
 	_ = stagingFile.Close()
-	extension, mimeType := formatInfo(format)
+	extension, mimeType := detection.Extension, detection.MIMEType
 	isVideo := false
 	if detectErr != nil {
 		videoFile, openErr := s.storage.Open(staged.Key)
@@ -180,8 +180,14 @@ func (s *Service) Process(ctx context.Context, id string) {
 		return
 	}
 
+	family, kind := detectStoredMedia(originalPath, item.OriginalKey)
 	metadata, err := s.processor.Process(ctx, imageproc.Request{
-		OriginalPath: originalPath, PreviewPath: previewPath, ThumbnailPath: thumbnailPath,
+		AssetID:       id,
+		OriginalPath:  originalPath,
+		PreviewPath:   previewPath,
+		ThumbnailPath: thumbnailPath,
+		Family:        family,
+		Kind:          kind,
 	})
 	if err != nil {
 		_ = s.storage.Purge(previewTempKey, thumbnailTempKey)
@@ -264,19 +270,17 @@ func newID() (string, error) {
 	return hex.EncodeToString(value[:]), nil
 }
 
-func formatInfo(format imageproc.Format) (string, string) {
-	switch format {
-	case imageproc.FormatJPEG:
-		return ".jpg", "image/jpeg"
-	case imageproc.FormatPNG:
-		return ".png", "image/png"
-	case imageproc.FormatWebP:
-		return ".webp", "image/webp"
-	case imageproc.FormatHEIF:
-		return ".heic", "image/heif"
-	case imageproc.FormatTIFF:
-		return ".tiff", "image/tiff"
-	default:
-		return "." + strings.ToLower(string(format)), "application/octet-stream"
+func detectStoredMedia(originalPath, originalKey string) (imageproc.Format, string) {
+	file, err := os.Open(originalPath)
+	if err == nil {
+		detection, detectErr := imageproc.DetectMedia(file)
+		_ = file.Close()
+		if detectErr == nil {
+			return detection.Family, detection.Kind
+		}
 	}
+	if kind := imageproc.RawKindFromExtension(filepath.Ext(originalKey)); kind != "" {
+		return imageproc.FormatRAW, kind
+	}
+	return "", ""
 }
